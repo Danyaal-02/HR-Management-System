@@ -6,8 +6,6 @@ import Navbar from '../../components/Navbar/Navbar'
 import ResumeTab from '../MyProfile/tabs/ResumeTab'
 import PrivateInfoTab from '../MyProfile/tabs/PrivateInfoTab'
 import SalaryInfoTab from '../MyProfile/tabs/SalaryInfoTab'
-import '../MyProfile/MyProfile.css'
-import './EmployeeProfile.css'
 
 function EmployeeProfile() {
   const { id } = useParams()
@@ -48,10 +46,10 @@ function EmployeeProfile() {
 
   if (isLoading) {
     return (
-      <div className="profile-page">
+      <div className="min-h-screen bg-bg-dark">
         <Navbar />
-        <main className="profile-main profile-main--empty">
-          <div className="profile-not-found-card"><p>Loading profile…</p></div>
+        <main className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-center min-h-[400px]">
+          <div className="bg-bg-card border border-border-color rounded-lg p-8 text-center max-w-[480px] w-full"><p className="text-text-muted italic">Loading profile…</p></div>
         </main>
       </div>
     )
@@ -59,13 +57,13 @@ function EmployeeProfile() {
 
   if (!employee) {
     return (
-      <div className="profile-page">
+      <div className="min-h-screen bg-bg-dark">
         <Navbar />
-        <main className="profile-main profile-main--empty">
-          <div className="profile-not-found-card">
-            <h2>Employee Not Found</h2>
-            <p>The employee with ID &quot;{id}&quot; does not exist or has been removed.</p>
-            <button type="button" onClick={() => navigate('/dashboard')}>Go Back to Dashboard</button>
+        <main className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-center min-h-[400px]">
+          <div className="bg-bg-card border border-border-color rounded-lg p-8 text-center max-w-[480px] w-full">
+            <h2 className="text-xl font-bold text-text-primary mb-2">Employee Not Found</h2>
+            <p className="text-sm text-text-secondary mb-5">The employee with ID &quot;{id}&quot; does not exist or has been removed.</p>
+            <button type="button" className="px-6 py-2.5 bg-gradient-primary text-white rounded-md text-sm font-semibold cursor-pointer transition-all duration-200 hover:opacity-90" onClick={() => navigate('/dashboard')}>Go Back to Dashboard</button>
           </div>
         </main>
       </div>
@@ -81,13 +79,13 @@ function EmployeeProfile() {
   ]
 
   return (
-    <div className="profile-page">
+    <div className="min-h-screen bg-bg-dark">
       <Navbar />
 
-      <main className="profile-main">
+      <main className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-6">
         {/* Back navigation */}
-        <div className="profile-back-link">
-          <button type="button" onClick={() => navigate('/dashboard')} id="btn-back-to-directory">
+        <div className="mb-2">
+          <button type="button" className="bg-transparent border-none text-text-secondary text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors duration-200 hover:text-text-primary" onClick={() => navigate('/dashboard')} id="btn-back-to-directory">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
@@ -97,38 +95,38 @@ function EmployeeProfile() {
         </div>
 
         {/* Profile Header Card */}
-        <section className="profile-header-card profile-header-card--viewonly" id="employee-profile-header">
-          <div className="profile-header-card__avatar-section">
-            <div className="profile-header-card__avatar-container profile-header-card__avatar-container--viewonly">
+        <section className="bg-bg-card border border-border-color rounded-lg p-8 flex justify-between items-center gap-8 max-lg:flex-col max-lg:items-start" id="employee-profile-header">
+          <div className="flex items-center gap-6">
+            <div className="relative w-[100px] h-[100px] rounded-full shrink-0">
               {employee.profile_picture ? (
-                <img src={employee.profile_picture} alt={displayName} className="profile-header-card__avatar" />
+                <img src={employee.profile_picture} alt={displayName} className="w-full h-full object-cover rounded-full border-3 border-primary-purple/20" />
               ) : (
-                <div className="profile-header-card__avatar-placeholder">{getInitials(employee)}</div>
+                <div className="w-full h-full rounded-full bg-gradient-primary text-white flex items-center justify-center text-3xl font-bold border-3 border-white/5">{getInitials(employee)}</div>
               )}
             </div>
-            <div className="profile-header-card__basic-info">
-              <h1 className="profile-header-card__name">{displayName}</h1>
-              <p className="profile-header-card__role">{employee.designation || employee.role}</p>
-              <span className="profile-header-card__id">Emp ID: {employee.employee_id}</span>
+            <div className="flex flex-col gap-1">
+              <h1 className="text-[1.6rem] font-extrabold text-text-primary m-0">{displayName}</h1>
+              <p className="text-[0.95rem] font-semibold text-primary-purple m-0">{employee.designation || employee.role}</p>
+              <span className="text-[0.8rem] text-text-muted font-medium">Emp ID: {employee.employee_id}</span>
             </div>
           </div>
 
-          <div className="profile-header-card__details">
-            <div className="profile-detail-item">
-              <span className="profile-detail-item__label">Department</span>
-              <span className="profile-detail-item__value">{employee.department || '—'}</span>
+          <div className="grid grid-cols-3 max-xl:grid-cols-2 max-sm:grid-cols-1 gap-x-10 gap-y-5 max-w-[600px]">
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Department</span>
+              <span className="text-[0.88rem] font-semibold text-text-primary">{employee.department || '—'}</span>
             </div>
-            <div className="profile-detail-item">
-              <span className="profile-detail-item__label">Work Email</span>
-              <span className="profile-detail-item__value">{employee.email}</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Work Email</span>
+              <span className="text-[0.88rem] font-semibold text-text-primary">{employee.email}</span>
             </div>
-            <div className="profile-detail-item">
-              <span className="profile-detail-item__label">Mobile</span>
-              <span className="profile-detail-item__value">{employee.phone || 'Not set'}</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Mobile</span>
+              <span className="text-[0.88rem] font-semibold text-text-primary">{employee.phone || 'Not set'}</span>
             </div>
-            <div className="profile-detail-item">
-              <span className="profile-detail-item__label">Joining Date</span>
-              <span className="profile-detail-item__value">
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Joining Date</span>
+              <span className="text-[0.88rem] font-semibold text-text-primary">
                 {employee.date_of_joining ? employee.date_of_joining.split('T')[0] : '—'}
               </span>
             </div>
@@ -136,12 +134,12 @@ function EmployeeProfile() {
         </section>
 
         {/* Tabs navigation */}
-        <section className="profile-tabs-nav">
+        <section className="flex gap-2 border-b border-border-color pb-[1px] mt-2 flex-wrap">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              className={`profile-tab-btn ${activeTab === tab.id ? 'profile-tab-btn--active' : ''}`}
+              className={`relative border-b-2 px-6 py-3 text-[0.9rem] font-semibold text-text-secondary cursor-pointer transition-all duration-200 hover:text-text-primary ${activeTab === tab.id ? 'text-primary-purple! border-primary-purple!' : 'border-transparent'}`}
               onClick={() => setActiveTab(tab.id)}
               id={`emp-tab-btn-${tab.id}`}
             >
@@ -151,7 +149,7 @@ function EmployeeProfile() {
         </section>
 
         {/* Active Tab View */}
-        <section className="profile-tab-view">
+        <section className="mt-4">
           {activeTab === 'resume' && (
             <ResumeTab
               employee={{ ...employee, skills, certifications, ...profileInfo }}

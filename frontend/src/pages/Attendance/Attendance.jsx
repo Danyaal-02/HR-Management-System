@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useMyAttendance, useAdminAttendanceOverview } from '../../hooks/useAttendanceApi'
 import Navbar from '../../components/Navbar/Navbar'
-import './Attendance.css'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -89,17 +88,25 @@ function Attendance() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
   }
 
+  const getStatusClass = (status) => {
+    const s = (status || '').toLowerCase()
+    if (s === 'present') return 'bg-status-success/12 text-status-success'
+    if (s === 'absent') return 'bg-status-error/12 text-status-error'
+    if (s === 'leave') return 'bg-status-warning/12 text-status-warning'
+    return 'bg-text-muted/12 text-text-muted'
+  }
+
   // ===== EMPLOYEE VIEW =====
   const renderEmployeeView = () => (
-    <div className="attendance-employee" id="attendance-employee-view">
+    <div className="flex flex-col gap-6" id="attendance-employee-view">
       {/* Month Selector */}
-      <div className="attendance-controls">
-        <h2 className="attendance-title">My Attendance</h2>
-        <div className="attendance-month-select">
+      <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">My Attendance</h2>
+        <div className="flex gap-2.5">
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="attendance-select"
+            className="bg-bg-input border border-border-color text-text-primary px-3 py-2 rounded-sm text-[0.88rem] font-medium cursor-pointer focus:border-primary-purple focus:outline-none min-w-[120px]"
             id="attendance-month-dropdown"
           >
             {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
@@ -107,7 +114,7 @@ function Attendance() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="attendance-select"
+            className="bg-bg-input border border-border-color text-text-primary px-3 py-2 rounded-sm text-[0.88rem] font-medium cursor-pointer focus:border-primary-purple focus:outline-none min-w-[120px]"
             id="attendance-year-dropdown"
           >
             {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
@@ -116,21 +123,21 @@ function Attendance() {
       </div>
 
       {/* Stats Cards */}
-      <div className="attendance-stats" id="attendance-stats-cards">
-        <div className="attendance-stat-card attendance-stat-card--present">
-          <div className="attendance-stat-card__icon">
+      <div className="grid grid-cols-3 max-md:grid-cols-1 gap-5 mb-2" id="attendance-stats-cards">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex items-center gap-4.5 border-l-4 border-l-status-success">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white bg-gradient-primary">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <div className="attendance-stat-card__content">
-            <span className="attendance-stat-card__number">{monthlyStats.days_present}</span>
-            <span className="attendance-stat-card__label">Days Present</span>
+          <div className="flex flex-col">
+            <span className="text-[1.6rem] font-bold text-text-primary leading-none mb-1">{monthlyStats.days_present}</span>
+            <span className="text-[0.82rem] text-text-secondary font-medium uppercase tracking-[0.5px]">Days Present</span>
           </div>
         </div>
-        <div className="attendance-stat-card attendance-stat-card--leaves">
-          <div className="attendance-stat-card__icon">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex items-center gap-4.5 border-l-4 border-l-status-warning">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white bg-gradient-primary">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -138,13 +145,13 @@ function Attendance() {
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
-          <div className="attendance-stat-card__content">
-            <span className="attendance-stat-card__number">{monthlyStats.days_leave}</span>
-            <span className="attendance-stat-card__label">Leaves</span>
+          <div className="flex flex-col">
+            <span className="text-[1.6rem] font-bold text-text-primary leading-none mb-1">{monthlyStats.days_leave}</span>
+            <span className="text-[0.82rem] text-text-secondary font-medium uppercase tracking-[0.5px]">Leaves</span>
           </div>
         </div>
-        <div className="attendance-stat-card attendance-stat-card--total">
-          <div className="attendance-stat-card__icon">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex items-center gap-4.5 border-l-4 border-l-primary-purple">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white bg-gradient-primary">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
@@ -152,51 +159,51 @@ function Attendance() {
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
-          <div className="attendance-stat-card__content">
-            <span className="attendance-stat-card__number">{monthlyStats.total_working_days}</span>
-            <span className="attendance-stat-card__label">Total Working Days</span>
+          <div className="flex flex-col">
+            <span className="text-[1.6rem] font-bold text-text-primary leading-none mb-1">{monthlyStats.total_working_days}</span>
+            <span className="text-[0.82rem] text-text-secondary font-medium uppercase tracking-[0.5px]">Total Working Days</span>
           </div>
         </div>
       </div>
 
       {/* Attendance Table */}
-      <div className="attendance-table-container">
-        <table className="attendance-table" id="attendance-log-table">
+      <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden">
+        <table className="w-full border-collapse" id="attendance-log-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-              <th>Work Hours</th>
-              <th>Extra Hours</th>
-              <th>Status</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Date</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Check In</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Check Out</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Work Hours</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Extra Hours</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Status</th>
             </tr>
           </thead>
           <tbody>
             {loadingEmployee ? (
-              <tr><td colSpan="6" className="attendance-table__empty">Loading…</td></tr>
+              <tr><td colSpan="6" className="text-center! py-10 px-4! text-text-muted! italic">Loading…</td></tr>
             ) : employeeMonthLogs.length > 0 ? (
               employeeMonthLogs.map((log, idx) => (
-                <tr key={idx}>
-                  <td className="attendance-table__date">{formatTableDate(log.date)}</td>
-                  <td>
-                    <span className="attendance-time-badge attendance-time-badge--in">
+                <tr key={idx} className="hover:bg-primary-purple/4 transition-colors duration-200">
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle font-semibold">{formatTableDate(log.date)}</td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-sm text-xs font-semibold tabular-nums bg-status-success/12 text-status-success">
                       {log.check_in || '--:--'}
                     </span>
                   </td>
-                  <td>
-                    <span className="attendance-time-badge attendance-time-badge--out">
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-sm text-xs font-semibold tabular-nums bg-status-error/12 text-status-error">
                       {log.check_out || '--:--'}
                     </span>
                   </td>
-                  <td><span className="attendance-hours">{formatWorkHours(log.work_hours)}</span></td>
-                  <td>
-                    <span className={`attendance-extra ${log.work_hours > 8 ? 'attendance-extra--has' : ''}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle"><span className="font-semibold text-text-primary tabular-nums">{formatWorkHours(log.work_hours)}</span></td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className={`text-[0.85rem] tabular-nums ${log.work_hours > 8 ? 'text-status-success font-semibold' : 'text-text-muted'}`}>
                       {formatExtraHours(log.work_hours)}
                     </span>
                   </td>
-                  <td>
-                    <span className={`timeoff-status-badge timeoff-status--${log.status}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(log.status)}`}>
                       {log.status}
                     </span>
                   </td>
@@ -204,7 +211,7 @@ function Attendance() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="attendance-table__empty">
+                <td colSpan="6" className="text-center! py-10 px-4! text-text-muted! italic">
                   No attendance records for {MONTHS[selectedMonth]} {selectedYear}
                 </td>
               </tr>
@@ -217,27 +224,27 @@ function Attendance() {
 
   // ===== ADMIN VIEW =====
   const renderAdminView = () => (
-    <div className="attendance-admin" id="attendance-admin-view">
+    <div className="flex flex-col gap-6" id="attendance-admin-view">
       {/* Date Navigation */}
-      <div className="attendance-controls">
-        <h2 className="attendance-title">All Employees Attendance</h2>
-        <div className="attendance-date-nav">
-          <button className="attendance-nav-btn" onClick={() => navigateAdminDate(-1)} id="attendance-prev-day" title="Previous Day">
+      <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">All Employees Attendance</h2>
+        <div className="flex items-center gap-3.5">
+          <button className="w-9 h-9 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary transition-all duration-200 hover:border-primary-purple hover:text-primary-purple" onClick={() => navigateAdminDate(-1)} id="attendance-prev-day" title="Previous Day">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="attendance-date-display">
+          <div className="relative flex items-center bg-bg-input border border-border-color rounded-sm px-3 h-9 min-w-[200px] justify-center">
             <input
               type="date"
               value={adminDate}
               onChange={(e) => setAdminDate(e.target.value)}
-              className="attendance-date-input"
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
               id="attendance-date-picker"
             />
-            <span className="attendance-date-text">{formatDisplayDate(adminDate)}</span>
+            <span className="text-[0.88rem] text-text-primary font-semibold">{formatDisplayDate(adminDate)}</span>
           </div>
-          <button className="attendance-nav-btn" onClick={() => navigateAdminDate(1)} id="attendance-next-day" title="Next Day">
+          <button className="w-9 h-9 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary transition-all duration-200 hover:border-primary-purple hover:text-primary-purple" onClick={() => navigateAdminDate(1)} id="attendance-next-day" title="Next Day">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="9 18 15 12 9 6" />
             </svg>
@@ -246,8 +253,8 @@ function Attendance() {
       </div>
 
       {/* Search Bar */}
-      <div className="attendance-search-container">
-        <svg className="attendance-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-11 max-w-[400px] transition-all duration-200 focus-within:border-primary-purple focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.15)]">
+        <svg className="text-text-muted shrink-0 mr-2.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
@@ -256,59 +263,59 @@ function Attendance() {
           placeholder="Search employees..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="attendance-search-input"
+          className="flex-1 bg-transparent border-none text-text-primary text-[0.9rem] h-full focus:outline-none placeholder-text-muted"
           id="attendance-search-input"
         />
       </div>
 
       {/* Admin Attendance Table */}
-      <div className="attendance-table-container">
-        <table className="attendance-table attendance-table--admin" id="admin-attendance-table">
+      <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden">
+        <table className="w-full border-collapse" id="admin-attendance-table">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-              <th>Work Hours</th>
-              <th>Extra Hours</th>
-              <th>Status</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Employee</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Check In</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Check Out</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Work Hours</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Extra Hours</th>
+              <th className="text-left text-[0.78rem] font-bold text-text-secondary uppercase tracking-[0.6px] px-4 py-3.5 border-b border-border-color bg-primary-purple/6">Status</th>
             </tr>
           </thead>
           <tbody>
             {loadingAdmin ? (
-              <tr><td colSpan="6" className="attendance-table__empty">Loading…</td></tr>
+              <tr><td colSpan="6" className="text-center! py-10 px-4! text-text-muted! italic">Loading…</td></tr>
             ) : adminLogs.length > 0 ? (
               adminLogs.map((log, idx) => (
-                <tr key={idx}>
-                  <td>
-                    <div className="attendance-employee-cell">
+                <tr key={idx} className="hover:bg-primary-purple/4 transition-colors duration-200">
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <div className="flex items-center gap-2.5">
                       {log.profile_picture ? (
-                        <img src={log.profile_picture} alt={log.first_name} className="attendance-avatar-img" />
+                        <img src={log.profile_picture} alt={log.first_name} className="w-[34px] h-[34px] rounded-full object-cover shrink-0" />
                       ) : (
-                        <div className="attendance-avatar-placeholder">
+                        <div className="w-[34px] h-[34px] rounded-full bg-gradient-primary text-white flex items-center justify-center font-bold text-[0.72rem] shrink-0">
                           {getInitials(log.first_name, log.last_name)}
                         </div>
                       )}
-                      <div className="attendance-employee-info">
-                        <span className="attendance-employee-name">{log.first_name} {log.last_name}</span>
-                        <span className="attendance-employee-dept">{log.department || ''}</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-[0.88rem] text-text-primary">{log.first_name} {log.last_name}</span>
+                        <span className="text-[0.76rem] text-text-muted">{log.department || ''}</span>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span className="attendance-time-badge attendance-time-badge--in">{log.check_in || '--:--'}</span>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-sm text-xs font-semibold tabular-nums bg-status-success/12 text-status-success">{log.check_in || '--:--'}</span>
                   </td>
-                  <td>
-                    <span className="attendance-time-badge attendance-time-badge--out">{log.check_out || '--:--'}</span>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-sm text-xs font-semibold tabular-nums bg-status-error/12 text-status-error">{log.check_out || '--:--'}</span>
                   </td>
-                  <td><span className="attendance-hours">{formatWorkHours(log.work_hours)}</span></td>
-                  <td>
-                    <span className={`attendance-extra ${log.work_hours > 8 ? 'attendance-extra--has' : ''}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle"><span className="font-semibold text-text-primary tabular-nums">{formatWorkHours(log.work_hours)}</span></td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className={`text-[0.85rem] tabular-nums ${log.work_hours > 8 ? 'text-status-success font-semibold' : 'text-text-muted'}`}>
                       {formatExtraHours(log.work_hours)}
                     </span>
                   </td>
-                  <td>
-                    <span className={`timeoff-status-badge timeoff-status--${log.status || 'absent'}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(log.status || 'absent')}`}>
                       {log.status || 'absent'}
                     </span>
                   </td>
@@ -316,7 +323,7 @@ function Attendance() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="attendance-table__empty">
+                <td colSpan="6" className="text-center! py-10 px-4! text-text-muted! italic">
                   No attendance records for {formatDisplayDate(adminDate)}
                 </td>
               </tr>
@@ -328,9 +335,9 @@ function Attendance() {
   )
 
   return (
-    <div className="attendance-page">
+    <div className="min-h-screen bg-bg-dark">
       <Navbar />
-      <main className="attendance-main">
+      <main className="max-w-[1200px] mx-auto px-6 py-8">
         {isAdmin ? renderAdminView() : renderEmployeeView()}
       </main>
     </div>
