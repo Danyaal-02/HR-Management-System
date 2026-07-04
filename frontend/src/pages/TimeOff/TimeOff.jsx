@@ -57,19 +57,16 @@ function TimeOff() {
   const myLeaves = useMemo(() => {
     if (!user) return []
     return getEmployeeLeaves(user.id)
-  }, [user, leaveRequests, getEmployeeLeaves])
+  }, [user, getEmployeeLeaves])
 
   // ===== Admin Data =====
-  const pendingLeaves = useMemo(
-    () => getPendingLeaves(),
-    [leaveRequests, getPendingLeaves]
-  )
+  const pendingLeaves = useMemo(() => getPendingLeaves(), [getPendingLeaves])
 
   const allLeaves = useMemo(() => {
     const leaves = getAllLeaves()
     if (adminFilter === 'all') return leaves
     return leaves.filter((l) => l.status === adminFilter)
-  }, [leaveRequests, adminFilter, getAllLeaves])
+  }, [adminFilter, getAllLeaves])
 
   // ===== Calendar Data =====
   const calendarData = useMemo(() => {
