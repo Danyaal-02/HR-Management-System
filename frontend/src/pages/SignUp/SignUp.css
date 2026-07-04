@@ -1,0 +1,137 @@
+/* ===== Sign Up Specific Overrides ===== */
+/* Imports base auth styles from SignIn.css */
+@import '../SignIn/SignIn.css';
+
+/* Sign Up container is slightly wider to accommodate more fields */
+.auth-container--signup {
+  max-width: 1020px;
+}
+
+.auth-form-wrapper--signup {
+  padding: 36px 40px;
+}
+
+.auth-form--signup {
+  max-width: 420px;
+}
+
+.auth-form--signup .auth-form__fields {
+  gap: 16px;
+}
+
+.auth-form--signup .auth-form__header {
+  margin-bottom: 24px;
+}
+
+/* ===== Company Row: Input + Logo Upload ===== */
+.signup-company-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.signup-company-row .auth-field__input-wrapper {
+  flex: 1;
+}
+
+/* ===== Logo Upload ===== */
+.signup-logo-upload {
+  flex-shrink: 0;
+}
+
+.signup-logo-upload__input {
+  display: none;
+}
+
+.signup-logo-upload__btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border: 1px dashed var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.signup-logo-upload__btn:hover {
+  border-color: var(--primary-purple);
+  color: var(--primary-purple);
+  background: rgba(168, 85, 247, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15);
+}
+
+.signup-logo-upload__preview {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--primary-purple);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.2);
+  animation: logoPreviewAppear 0.3s ease;
+}
+
+@keyframes logoPreviewAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.signup-logo-upload__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.signup-logo-upload__remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--error);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 2px solid var(--bg-card);
+}
+
+.signup-logo-upload__remove:hover {
+  transform: scale(1.15);
+  background: #dc2626;
+}
+
+/* ===== Responsive for Sign Up ===== */
+@media (max-width: 768px) {
+  .auth-container--signup {
+    max-width: 440px;
+  }
+
+  .auth-form-wrapper--signup {
+    padding: 32px 24px;
+  }
+
+  .auth-form--signup .auth-form__fields {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-form-wrapper--signup {
+    padding: 24px 18px;
+  }
+}
