@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import './tabs.css'
+import { useChangePassword } from '../../../hooks/useAuthApi'
 
 function SecurityTab() {
+  const changePasswordMutation = useChangePassword()
+
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -46,42 +48,50 @@ function SecurityTab() {
       return
     }
 
-    // Simulate save success
-    setSuccessMsg('Password updated successfully!')
-    setFormData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    })
-    setErrors({})
+    changePasswordMutation.mutate(
+      { current_password: formData.currentPassword, new_password: formData.newPassword },
+      {
+        onSuccess: (res) => {
+          if (res.success) {
+            setSuccessMsg('Password updated successfully!')
+            setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+            setErrors({})
+          }
+        },
+        onError: (err) => {
+          const msg = err?.response?.data?.message || 'Failed to update password.'
+          setErrors({ currentPassword: msg })
+        },
+      }
+    )
   }
 
   return (
-    <div className="profile-tab-content security-tab">
+    <div className="animate-tab-fade-in pt-4 flex justify-center py-6">
       <form
         onSubmit={handleSubmit}
-        className="security-form"
+        className="bg-bg-card border border-border-color rounded-lg p-8 w-full max-w-[480px]"
         id="password-change-form"
       >
-        <h3 className="security-form__title">Change Password</h3>
-        <p className="security-form__desc">
+        <h3 className="text-[1.25rem] text-text-primary mb-1.5 font-bold">Change Password</h3>
+        <p className="text-[0.85rem] text-text-secondary mb-6">
           Update your login password regularly to keep your account secure.
         </p>
 
         {successMsg && (
-          <div className="security-form__success">{successMsg}</div>
+          <div className="bg-status-success/10 text-status-success p-3 rounded-md border border-status-success/20 mb-5 text-[0.88rem] text-center">{successMsg}</div>
         )}
 
-        <div className="security-form__fields">
-          <div className="auth-field">
-            <label className="auth-field__label" htmlFor="sec-current-password">
+        <div className="flex flex-col gap-5 mb-6">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-wide" htmlFor="sec-current-password">
               Current Password
             </label>
             <div
-              className={`auth-field__input-wrapper ${errors.currentPassword ? 'auth-field__input-wrapper--error' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.currentPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
-                className="auth-field__icon"
+                className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
@@ -99,10 +109,11 @@ function SecurityTab() {
                 value={formData.currentPassword}
                 onChange={handleChange}
                 placeholder="Enter current password"
+                className="flex-1 bg-transparent border-none text-text-primary text-[0.92rem] h-full focus:outline-none placeholder-text-muted"
               />
               <button
                 type="button"
-                className="auth-field__toggle"
+                className="flex items-center justify-center bg-transparent text-text-muted p-1 rounded-sm text-xs font-semibold transition-all duration-200 hover:text-text-primary hover:bg-white/5"
                 onClick={() => setShowCurrent(!showCurrent)}
                 aria-label={showCurrent ? 'Hide password' : 'Show password'}
               >
@@ -110,21 +121,21 @@ function SecurityTab() {
               </button>
             </div>
             {errors.currentPassword && (
-              <span className="auth-field__error">
+              <span className="text-[0.78rem] text-status-error flex items-center gap-1 mt-1 pl-1">
                 {errors.currentPassword}
               </span>
             )}
           </div>
 
-          <div className="auth-field">
-            <label className="auth-field__label" htmlFor="sec-new-password">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-wide" htmlFor="sec-new-password">
               New Password
             </label>
             <div
-              className={`auth-field__input-wrapper ${errors.newPassword ? 'auth-field__input-wrapper--error' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.newPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
-                className="auth-field__icon"
+                className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
@@ -142,10 +153,11 @@ function SecurityTab() {
                 value={formData.newPassword}
                 onChange={handleChange}
                 placeholder="Enter new password"
+                className="flex-1 bg-transparent border-none text-text-primary text-[0.92rem] h-full focus:outline-none placeholder-text-muted"
               />
               <button
                 type="button"
-                className="auth-field__toggle"
+                className="flex items-center justify-center bg-transparent text-text-muted p-1 rounded-sm text-xs font-semibold transition-all duration-200 hover:text-text-primary hover:bg-white/5"
                 onClick={() => setShowNew(!showNew)}
                 aria-label={showNew ? 'Hide password' : 'Show password'}
               >
@@ -153,19 +165,19 @@ function SecurityTab() {
               </button>
             </div>
             {errors.newPassword && (
-              <span className="auth-field__error">{errors.newPassword}</span>
+              <span className="text-[0.78rem] text-status-error flex items-center gap-1 mt-1 pl-1">{errors.newPassword}</span>
             )}
           </div>
 
-          <div className="auth-field">
-            <label className="auth-field__label" htmlFor="sec-confirm-password">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-wide" htmlFor="sec-confirm-password">
               Confirm New Password
             </label>
             <div
-              className={`auth-field__input-wrapper ${errors.confirmPassword ? 'auth-field__input-wrapper--error' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.confirmPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
-                className="auth-field__icon"
+                className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
@@ -183,10 +195,11 @@ function SecurityTab() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm new password"
+                className="flex-1 bg-transparent border-none text-text-primary text-[0.92rem] h-full focus:outline-none placeholder-text-muted"
               />
               <button
                 type="button"
-                className="auth-field__toggle"
+                className="flex items-center justify-center bg-transparent text-text-muted p-1 rounded-sm text-xs font-semibold transition-all duration-200 hover:text-text-primary hover:bg-white/5"
                 onClick={() => setShowConfirm(!showConfirm)}
                 aria-label={showConfirm ? 'Hide password' : 'Show password'}
               >
@@ -194,7 +207,7 @@ function SecurityTab() {
               </button>
             </div>
             {errors.confirmPassword && (
-              <span className="auth-field__error">
+              <span className="text-[0.78rem] text-status-error flex items-center gap-1 mt-1 pl-1">
                 {errors.confirmPassword}
               </span>
             )}
@@ -203,10 +216,11 @@ function SecurityTab() {
 
         <button
           type="submit"
-          className="auth-form__submit security-form__btn"
+          className="w-full h-12 bg-gradient-primary hover:bg-gradient-hover text-white text-[0.95rem] font-bold tracking-wider rounded-md flex items-center justify-center transition-all duration-300 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 uppercase mt-3"
           id="sec-submit-btn"
+          disabled={changePasswordMutation.isPending}
         >
-          Update Password
+          {changePasswordMutation.isPending ? 'Updating…' : 'Update Password'}
         </button>
       </form>
     </div>

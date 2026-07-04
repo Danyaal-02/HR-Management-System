@@ -1,105 +1,87 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useMyLeaves, useApplyLeave, useAdminLeaves, useApproveOrRejectLeave } from '../../hooks/useLeaveApi'
 import Navbar from '../../components/Navbar/Navbar'
-import './TimeOff.css'
 
 const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-const LEAVE_TYPES = ['Paid Leave', 'Sick Leave', 'Unpaid Leave']
+const LEAVE_TYPES = ['Paid Time Off', 'Sick Leave', 'Unpaid Leaves']
 
 function TimeOff() {
-  const {
-    user,
-    employees,
-    leaveRequests,
-    applyLeave,
-    updateLeaveStatus,
-    getEmployeeLeaves,
-    getPendingLeaves,
-    getAllLeaves,
-    getEmployeeAttendance,
-  } = useAuth()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const attachmentRef = useRef(null)
 
-  const isAdmin = user?.role === 'HR'
+  const now = new Date()
 
   // ===== Employee: Apply Leave Form =====
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    type: 'Paid Leave',
-    startDate: '',
-    endDate: '',
-    reason: '',
-  })
+  const [formData, setFormData] = useState({ type: 'Paid Time Off', startDate: '', endDate: '', remarks: '' })
+  const [attachmentFile, setAttachmentFile] = useState(null)
   const [formError, setFormError] = useState('')
 
   // ===== Calendar State =====
-  const [calMonth, setCalMonth] = useState(9) // October
-  const [calYear, setCalYear] = useState(2025)
+  const [calMonth, setCalMonth] = useState(now.getMonth())
+  const [calYear, setCalYear] = useState(now.getFullYear())
 
   // ===== Admin: Approval =====
   const [approvalComment, setApprovalComment] = useState({})
-  const [adminFilter, setAdminFilter] = useState('all') // 'all', 'pending', 'approved', 'rejected'
+  const [adminFilter, setAdminFilter] = useState('all')
 
-  // ===== Employee Leave History =====
-  const myLeaves = useMemo(() => {
-    if (!user) return []
-    return getEmployeeLeaves(user.id)
-  }, [user, getEmployeeLeaves])
+  // ─── TanStack Query hooks ──────────────────────────────────────────────────
+  const { data: myLeavesData, isLoading: loadingMyLeaves } = useMyLeaves({ enabled: !isAdmin && !!user })
+  const { data: adminLeavesData, isLoading: loadingAdminLeaves } = useAdminLeaves({ enabled: isAdmin })
 
-  // ===== Admin Data =====
-  const pendingLeaves = useMemo(() => getPendingLeaves(), [getPendingLeaves])
+  const applyLeaveMutation = useApplyLeave({
+    onSuccess: () => {
+      setShowForm(false)
+      setFormData({ type: 'Paid Time Off', startDate: '', endDate: '', remarks: '' })
+      setAttachmentFile(null)
+      setFormError('')
+    },
+    onError: (err) => {
+      setFormError(err?.response?.data?.message || 'Failed to submit leave request.')
+    },
+  })
 
-  const allLeaves = useMemo(() => {
-    const leaves = getAllLeaves()
-    if (adminFilter === 'all') return leaves
-    return leaves.filter((l) => l.status === adminFilter)
-  }, [adminFilter, getAllLeaves])
+  const approveRejectMutation = useApproveOrRejectLeave({
+    onSuccess: () => setApprovalComment({}),
+    onError: (err) => alert(err?.response?.data?.message || 'Action failed.'),
+  })
 
-  // ===== Calendar Data =====
+  // ─── Derived data ──────────────────────────────────────────────────────────
+  const myLeaves = myLeavesData?.leaves || []
+  const balances = myLeavesData?.balances || { paid: 0, sick: 0 }
+
+  const allAdminLeaves = adminLeavesData?.data || []
+  const pendingCount = allAdminLeaves.filter((l) => l.status === 'pending').length
+
+  const filteredAdminLeaves = useMemo(() => {
+    if (adminFilter === 'all') return allAdminLeaves
+    return allAdminLeaves.filter((l) => l.status === adminFilter)
+  }, [allAdminLeaves, adminFilter])
+
+  // ─── Calendar data (from approved leaves) ─────────────────────────────────
   const calendarData = useMemo(() => {
-    if (!user) return {}
-
     const data = {}
-    const logs = getEmployeeAttendance(user.id, calMonth, calYear)
-
-    // Mark present days
-    logs.forEach((log) => {
-      const day = new Date(log.date).getDate()
-      data[day] = 'present'
-    })
-
-    // Mark leave days (approved)
-    const empLeaves = leaveRequests.filter(
-      (lr) => lr.employeeId === user.id && lr.status === 'approved'
-    )
-
-    empLeaves.forEach((lr) => {
-      const start = new Date(lr.startDate)
-      const end = new Date(lr.endDate)
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
-          data[d.getDate()] = 'leave'
+    myLeaves
+      .filter((lr) => lr.status === 'approved')
+      .forEach((lr) => {
+        const start = new Date(lr.start_date + 'T00:00:00')
+        const end = new Date(lr.end_date + 'T00:00:00')
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
+            data[d.getDate()] = 'leave'
+          }
         }
-      }
-    })
-
+      })
     return data
-  }, [user, calMonth, calYear, leaveRequests, getEmployeeAttendance])
+  }, [myLeaves, calMonth, calYear])
 
-  // ===== Handlers =====
+  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleApplyLeave = (e) => {
     e.preventDefault()
     setFormError('')
@@ -112,149 +94,119 @@ function TimeOff() {
       setFormError('End date must be after start date.')
       return
     }
-    if (!formData.reason.trim()) {
+    if (!formData.remarks.trim()) {
       setFormError('Please provide a reason for leave.')
       return
     }
 
-    // Calculate days
-    const start = new Date(formData.startDate)
-    const end = new Date(formData.endDate)
-    let days = 0
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (d.getDay() !== 0 && d.getDay() !== 6) days++
-    }
+    const fd = new FormData()
+    fd.append('leave_type', formData.type)
+    fd.append('start_date', formData.startDate)
+    fd.append('end_date', formData.endDate)
+    fd.append('remarks', formData.remarks)
+    if (attachmentFile) fd.append('attachment', attachmentFile)
 
-    applyLeave({
-      type: formData.type,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      days,
-      reason: formData.reason.trim(),
-    })
-
-    setFormData({ type: 'Paid Leave', startDate: '', endDate: '', reason: '' })
-    setShowForm(false)
+    applyLeaveMutation.mutate(fd)
   }
 
-  const handleApprove = (requestId) => {
-    const comment = approvalComment[requestId] || ''
-    updateLeaveStatus(requestId, 'approved', comment)
-    setApprovalComment((prev) => ({ ...prev, [requestId]: '' }))
+  const handleApprove = (id) => {
+    approveRejectMutation.mutate({ id, status: 'approved', admin_comment: approvalComment[id] || '' })
+    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
   }
 
-  const handleReject = (requestId) => {
-    const comment = approvalComment[requestId] || ''
-    updateLeaveStatus(requestId, 'rejected', comment)
-    setApprovalComment((prev) => ({ ...prev, [requestId]: '' }))
+  const handleReject = (id) => {
+    approveRejectMutation.mutate({ id, status: 'rejected', admin_comment: approvalComment[id] || '' })
+    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
   }
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'approved':
-        return 'timeoff-status--approved'
-      case 'rejected':
-        return 'timeoff-status--rejected'
-      case 'pending':
-        return 'timeoff-status--pending'
-      default:
-        return ''
+      case 'approved': return 'bg-status-success/12 text-status-success'
+      case 'rejected': return 'bg-status-error/12 text-status-error'
+      case 'pending':  return 'bg-status-warning/12 text-status-warning'
+      default:         return ''
     }
   }
 
   const getLeaveTypeClass = (type) => {
-    switch (type) {
-      case 'Paid Leave':
-        return 'timeoff-type--paid'
-      case 'Sick Leave':
-        return 'timeoff-type--sick'
-      case 'Unpaid Leave':
-        return 'timeoff-type--unpaid'
-      default:
-        return ''
-    }
+    if (!type) return ''
+    const t = type.toLowerCase()
+    if (t.includes('paid')) return 'bg-status-info/12 text-status-info'
+    if (t.includes('sick')) return 'bg-status-warning/12 text-status-warning'
+    if (t.includes('unpaid')) return 'bg-status-error/12 text-status-error'
+    return ''
+  }
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    return dateStr.split('T')[0]
   }
 
   // ===== Calendar Rendering =====
   const renderCalendar = () => {
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
-    const firstDay = new Date(calYear, calMonth, 1).getDay() // 0=Sun
+    const firstDay = new Date(calYear, calMonth, 1).getDay()
     const days = []
 
-    // Empty cells for days before the 1st
     for (let i = 0; i < firstDay; i++) {
-      days.push(
-        <div
-          key={`empty-${i}`}
-          className="timeoff-cal-day timeoff-cal-day--empty"
-        ></div>
-      )
+      days.push(<div key={`empty-${i}`} className="aspect-square flex items-center justify-center bg-transparent"></div>)
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dayOfWeek = new Date(calYear, calMonth, d).getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       const status = calendarData[d] || (isWeekend ? 'weekend' : 'absent')
+      
+      let dayBgClass = 'bg-transparent'
+      if (status === 'present') dayBgClass = 'bg-status-success/15 text-status-success font-semibold'
+      else if (status === 'leave') dayBgClass = 'bg-status-warning/15 text-status-warning font-semibold'
+      else if (status === 'absent') dayBgClass = 'bg-status-error/8 text-text-muted'
+      else if (status === 'weekend') dayBgClass = 'bg-[rgba(107,107,128,0.08)] text-text-muted opacity-60'
 
       days.push(
-        <div
-          key={d}
-          className={`timeoff-cal-day timeoff-cal-day--${status}`}
-          title={status.charAt(0).toUpperCase() + status.slice(1)}
-        >
+        <div key={d} className={`aspect-square flex items-center justify-center text-[0.82rem] font-medium rounded-sm transition-all duration-200 cursor-default ${dayBgClass}`} title={status.charAt(0).toUpperCase() + status.slice(1)}>
           {d}
         </div>
       )
     }
-
     return days
   }
 
-  const getInitials = (name) => {
-    if (!name) return '??'
-    const parts = name.trim().split(/\s+/)
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  const getInitials = (firstName, lastName) => {
+    const f = (firstName || '')[0] || ''
+    const l = (lastName || '')[0] || ''
+    return (f + l).toUpperCase() || '??'
   }
 
   // ===== EMPLOYEE VIEW =====
   const renderEmployeeView = () => (
-    <div className="timeoff-employee" id="timeoff-employee-view">
+    <div className="flex flex-col gap-6" id="timeoff-employee-view">
       {/* Header with Apply Button */}
-      <div className="timeoff-header">
-        <h2 className="timeoff-title">Time Off</h2>
-        <button
-          className="timeoff-apply-btn"
-          onClick={() => setShowForm(!showForm)}
-          id="timeoff-apply-btn"
-        >
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Time Off</h2>
+          {/* Leave balance pills */}
+          <div className="flex gap-3 mt-2 flex-wrap">
+            <span className="bg-primary-purple/15 text-primary-purple px-3 py-1 rounded-full text-[13px] font-semibold">
+              🟣 Paid Leave: {balances.paid} days
+            </span>
+            <span className="bg-status-warning/15 text-status-warning px-3 py-1 rounded-full text-[13px] font-semibold">
+              乘 Sick Leave: {balances.sick} days
+            </span>
+          </div>
+        </div>
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white rounded-md font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0" onClick={() => setShowForm(!showForm)} id="timeoff-apply-btn">
           {showForm ? (
             <>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
               Cancel
             </>
           ) : (
             <>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Apply for Leave
             </>
@@ -264,201 +216,129 @@ function TimeOff() {
 
       {/* Apply Leave Form */}
       {showForm && (
-        <div className="timeoff-form-card" id="timeoff-apply-form">
-          <h3 className="timeoff-form-title">New Leave Request</h3>
+        <div className="bg-bg-card border border-border-color rounded-lg p-7 mb-7 animate-[slideDown_0.3s_ease-out]" id="timeoff-apply-form">
+          <h3 className="text-[1.1rem] font-semibold text-text-primary mb-5 font-bold">New Leave Request</h3>
           <form onSubmit={handleApplyLeave}>
-            <div className="timeoff-form-grid">
-              <div className="timeoff-form-group">
-                <label htmlFor="leave-type">Leave Type</label>
+            <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="leave-type" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Leave Type</label>
                 <select
                   id="leave-type"
                   value={formData.type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value })
-                  }
-                  className="timeoff-form-input"
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200"
                 >
-                  {LEAVE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
+                  {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
-              <div className="timeoff-form-group">
-                <label htmlFor="leave-start">Start Date</label>
-                <input
-                  id="leave-start"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                  className="timeoff-form-input"
-                />
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="leave-start" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Start Date</label>
+                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
               </div>
-              <div className="timeoff-form-group">
-                <label htmlFor="leave-end">End Date</label>
-                <input
-                  id="leave-end"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  className="timeoff-form-input"
-                />
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="leave-end" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">End Date</label>
+                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
               </div>
             </div>
-            <div className="timeoff-form-group" style={{ marginTop: '16px' }}>
-              <label htmlFor="leave-reason">Reason / Comments</label>
+            <div className="flex flex-col gap-1.5 mt-4">
+              <label htmlFor="leave-reason" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Reason / Comments</label>
               <textarea
                 id="leave-reason"
-                value={formData.reason}
-                onChange={(e) =>
-                  setFormData({ ...formData, reason: e.target.value })
-                }
-                className="timeoff-form-input timeoff-form-textarea"
+                value={formData.remarks}
+                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none resize-vertical min-h-[80px] transition-all duration-200"
                 placeholder="Please provide a reason for your leave request..."
                 rows="3"
               />
             </div>
-            {formError && <p className="timeoff-form-error">{formError}</p>}
+            {formData.type === 'Sick Leave' && (
+              <div className="flex flex-col gap-1.5 mt-4">
+                <label htmlFor="leave-attachment" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Medical Certificate (required for Sick Leave)</label>
+                <input
+                  id="leave-attachment"
+                  type="file"
+                  ref={attachmentRef}
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setAttachmentFile(e.target.files[0] || null)}
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:outline-none transition-all duration-200"
+                />
+              </div>
+            )}
+            {formError && <p className="text-status-error text-[0.85rem] mt-2.5">{formError}</p>}
             <button
               type="submit"
-              className="timeoff-form-submit"
+              className="mt-4 px-7 py-2.5 bg-gradient-primary text-white rounded-sm font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
               id="timeoff-submit-btn"
+              disabled={applyLeaveMutation.isPending}
             >
-              Submit Request
+              {applyLeaveMutation.isPending ? 'Submitting…' : 'Submit Request'}
             </button>
           </form>
         </div>
       )}
 
       {/* Calendar + History Layout */}
-      <div className="timeoff-content-grid">
+      <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
         {/* Calendar */}
-        <div className="timeoff-calendar-card" id="timeoff-calendar">
-          <div className="timeoff-calendar-header">
-            <button
-              className="timeoff-cal-nav-btn"
-              onClick={() => {
-                if (calMonth === 0) {
-                  setCalMonth(11)
-                  setCalYear(calYear - 1)
-                } else setCalMonth(calMonth - 1)
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex flex-col" id="timeoff-calendar">
+          <div className="flex items-center justify-between mb-5">
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
-            <span className="timeoff-calendar-month">
-              {MONTHS[calMonth]} {calYear}
-            </span>
-            <button
-              className="timeoff-cal-nav-btn"
-              onClick={() => {
-                if (calMonth === 11) {
-                  setCalMonth(0)
-                  setCalYear(calYear + 1)
-                } else setCalMonth(calMonth + 1)
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+            <span className="text-[1rem] font-bold text-text-primary">{MONTHS[calMonth]} {calYear}</span>
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
-          <div className="timeoff-cal-weekdays">
+          <div className="grid grid-cols-7 mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="timeoff-cal-weekday">
-                {d}
-              </div>
+              <div key={d} className="text-center text-sans text-[0.72rem] font-semibold text-text-muted uppercase tracking-wider py-1.5">{d}</div>
             ))}
           </div>
-          <div className="timeoff-cal-grid">{renderCalendar()}</div>
-          <div className="timeoff-cal-legend">
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--present"></span>
-              Present
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--leave"></span>
-              Leave
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--absent"></span>
-              Absent
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--weekend"></span>
-              Weekend
-            </div>
+          <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>
+          <div className="flex gap-4 mt-4 pt-3.5 border-t border-border-color flex-wrap">
+            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-success/50"></span>Present</div>
+            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-warning/50"></span>Leave</div>
+            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-error/30"></span>Absent</div>
+            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-[rgba(107,107,128,0.3)]"></span>Weekend</div>
           </div>
         </div>
 
         {/* Leave History */}
-        <div className="timeoff-history-card" id="timeoff-history">
-          <h3 className="timeoff-history-title">My Leave History</h3>
-          {myLeaves.length > 0 ? (
-            <div className="timeoff-history-list">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 max-h-[550px] overflow-y-auto flex flex-col" id="timeoff-history">
+          <h3 className="text-[1rem] font-bold text-text-primary mb-4">My Leave History</h3>
+          {loadingMyLeaves ? (
+            <p className="text-text-muted italic text-center py-6">Loading…</p>
+          ) : myLeaves.length > 0 ? (
+            <div className="flex flex-col gap-3">
               {myLeaves.map((lr) => (
-                <div key={lr.id} className="timeoff-history-item">
-                  <div className="timeoff-history-item__top">
-                    <span
-                      className={`timeoff-type-badge ${getLeaveTypeClass(lr.type)}`}
-                    >
-                      {lr.type}
+                <div key={lr.id} className="bg-bg-input border border-border-color rounded-md p-4 transition-all duration-200 hover:border-primary-purple/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
+                      {lr.leave_type}
                     </span>
-                    <span
-                      className={`timeoff-status-badge ${getStatusClass(lr.status)}`}
-                    >
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
                       {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
                     </span>
                   </div>
-                  <div className="timeoff-history-item__dates">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
+                  <div className="flex items-center gap-1.5 text-[0.82rem] text-text-secondary mb-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
+                      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    {lr.startDate} → {lr.endDate} ({lr.days} day
-                    {lr.days > 1 ? 's' : ''})
+                    {formatDate(lr.start_date)} → {formatDate(lr.end_date)} ({lr.days_requested} day{lr.days_requested > 1 ? 's' : ''})
                   </div>
-                  <p className="timeoff-history-item__reason">{lr.reason}</p>
-                  {lr.approverComment && (
-                    <p className="timeoff-history-item__comment">
-                      <strong>Admin:</strong> {lr.approverComment}
+                  <p className="text-[0.85rem] text-text-secondary leading-relaxed">{lr.remarks}</p>
+                  {lr.admin_comment && (
+                    <p className="text-[0.82rem] text-text-muted mt-2 pt-2 border-t border-border-color/30">
+                      <strong>Admin:</strong> {lr.admin_comment}
                     </p>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="timeoff-empty-msg">No leave requests found.</p>
+            <p className="text-text-muted italic text-center py-6">No leave requests found.</p>
           )}
         </div>
       </div>
@@ -467,22 +347,24 @@ function TimeOff() {
 
   // ===== ADMIN VIEW =====
   const renderAdminView = () => (
-    <div className="timeoff-admin" id="timeoff-admin-view">
-      <div className="timeoff-header">
-        <h2 className="timeoff-title">Leave Management</h2>
-        <div className="timeoff-admin-filters">
+    <div className="flex flex-col gap-6" id="timeoff-admin-view">
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
+        <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Leave Management</h2>
+        <div className="flex gap-2 flex-wrap">
           {['all', 'pending', 'approved', 'rejected'].map((filter) => (
             <button
               key={filter}
-              className={`timeoff-filter-btn ${adminFilter === filter ? 'timeoff-filter-btn--active' : ''}`}
+              className={`px-4 py-2 border rounded-md text-[0.85rem] font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                adminFilter === filter
+                  ? 'bg-primary-purple/10 border-primary-purple text-primary-purple font-semibold'
+                  : 'bg-bg-card border-border-color text-text-secondary hover:border-primary-purple hover:text-text-primary'
+              }`}
               onClick={() => setAdminFilter(filter)}
               id={`timeoff-filter-${filter}`}
             >
               {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              {filter === 'pending' && pendingLeaves.length > 0 && (
-                <span className="timeoff-filter-badge">
-                  {pendingLeaves.length}
-                </span>
+              {filter === 'pending' && pendingCount > 0 && (
+                <span className="bg-status-warning text-black text-[0.7rem] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center">{pendingCount}</span>
               )}
             </button>
           ))}
@@ -490,139 +372,91 @@ function TimeOff() {
       </div>
 
       {/* Leave Requests Table */}
-      <div className="timeoff-admin-table-container">
-        <table className="timeoff-admin-table" id="admin-leave-table">
+      <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden shadow-card">
+        <table className="w-full border-collapse" id="admin-leave-table">
           <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Type</th>
-              <th>Duration</th>
-              <th>Days</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
+            <tr className="bg-primary-purple/6">
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Employee</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Type</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Duration</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Days</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Reason</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Status</th>
+              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {allLeaves.length > 0 ? (
-              allLeaves.map((lr) => {
-                const emp = employees.find((e) => e.id === lr.employeeId)
-                return (
-                  <tr
-                    key={lr.id}
-                    className={
-                      lr.status === 'pending' ? 'timeoff-row--pending' : ''
-                    }
-                  >
-                    <td>
-                      <div className="timeoff-emp-cell">
-                        {emp?.profilePicture ? (
-                          <img
-                            src={emp.profilePicture}
-                            alt={emp?.name}
-                            className="timeoff-emp-avatar"
-                          />
-                        ) : (
-                          <div className="timeoff-emp-avatar-placeholder">
-                            {getInitials(emp?.name || lr.employeeName)}
-                          </div>
-                        )}
-                        <div className="timeoff-emp-info">
-                          <span className="timeoff-emp-name">
-                            {lr.employeeName}
-                          </span>
-                          <span className="timeoff-emp-dept">
-                            {emp?.department || ''}
-                          </span>
+            {loadingAdminLeaves ? (
+              <tr><td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">Loading…</td></tr>
+            ) : filteredAdminLeaves.length > 0 ? (
+              filteredAdminLeaves.map((lr) => (
+                <tr key={lr.id} className={`transition-colors duration-200 hover:bg-primary-purple/4 ${lr.status === 'pending' ? '!bg-status-warning/3' : ''}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-[34px] h-[34px] rounded-full bg-gradient-primary text-white flex items-center justify-center font-bold text-[0.72rem] shrink-0">
+                        {getInitials(lr.first_name, lr.last_name)}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-[0.88rem] text-text-primary">{lr.first_name} {lr.last_name}</span>
+                        <span className="text-[0.76rem] text-text-muted">{lr.employee_id}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
+                      {lr.leave_type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle font-semibold tabular-nums text-[0.82rem] whitespace-nowrap">{formatDate(lr.start_date)} → {formatDate(lr.end_date)}</td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle"><span className="inline-flex items-center justify-center min-w-[28px] h-6 bg-primary-purple/10 text-primary-purple rounded-full font-bold text-[0.82rem]">{lr.days_requested}</span></td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={lr.remarks}>{lr.remarks}</td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
+                      {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    {lr.status === 'pending' ? (
+                      <div className="flex flex-col gap-2 min-w-[160px]">
+                        <input
+                          type="text"
+                          placeholder="Comment..."
+                          value={approvalComment[lr.id] || ''}
+                          onChange={(e) => setApprovalComment((prev) => ({ ...prev, [lr.id]: e.target.value }))}
+                          className="bg-bg-input border border-border-color text-text-primary px-2.5 py-1.5 rounded-sm text-xs w-full focus:border-primary-purple focus:outline-none transition-all duration-200"
+                        />
+                        <div className="flex gap-1.5">
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-success bg-status-success/8 hover:bg-status-success/20 hover:border-status-success hover:scale-110 transition-all duration-200"
+                            onClick={() => handleApprove(lr.id)}
+                            title="Approve"
+                            disabled={approveRejectMutation.isPending}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </button>
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-error bg-status-error/8 hover:bg-status-error/20 hover:border-status-error hover:scale-110 transition-all duration-200"
+                            onClick={() => handleReject(lr.id)}
+                            title="Reject"
+                            disabled={approveRejectMutation.isPending}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <span
-                        className={`timeoff-type-badge ${getLeaveTypeClass(lr.type)}`}
-                      >
-                        {lr.type}
-                      </span>
-                    </td>
-                    <td className="timeoff-dates-cell">
-                      {lr.startDate} → {lr.endDate}
-                    </td>
-                    <td>
-                      <span className="timeoff-days-badge">{lr.days}</span>
-                    </td>
-                    <td className="timeoff-reason-cell">{lr.reason}</td>
-                    <td>
-                      <span
-                        className={`timeoff-status-badge ${getStatusClass(lr.status)}`}
-                      >
-                        {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
-                      </span>
-                    </td>
-                    <td>
-                      {lr.status === 'pending' ? (
-                        <div className="timeoff-actions">
-                          <input
-                            type="text"
-                            placeholder="Comment..."
-                            value={approvalComment[lr.id] || ''}
-                            onChange={(e) =>
-                              setApprovalComment((prev) => ({
-                                ...prev,
-                                [lr.id]: e.target.value,
-                              }))
-                            }
-                            className="timeoff-action-comment"
-                          />
-                          <div className="timeoff-action-btns">
-                            <button
-                              className="timeoff-action-btn timeoff-action-btn--approve"
-                              onClick={() => handleApprove(lr.id)}
-                              title="Approve"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                              >
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            </button>
-                            <button
-                              className="timeoff-action-btn timeoff-action-btn--reject"
-                              onClick={() => handleReject(lr.id)}
-                              title="Reject"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                              >
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="timeoff-action-done">
-                          {lr.approverComment || '—'}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })
+                    ) : (
+                      <span className="text-[0.82rem] text-text-muted italic">{lr.admin_comment || '—'}</span>
+                    )}
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
-                <td colSpan="7" className="timeoff-table-empty">
-                  No leave requests found for the selected filter.
-                </td>
+                <td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">No leave requests found for the selected filter.</td>
               </tr>
             )}
           </tbody>
@@ -632,9 +466,9 @@ function TimeOff() {
   )
 
   return (
-    <div className="timeoff-page">
+    <div className="min-h-screen bg-bg-dark">
       <Navbar />
-      <main className="timeoff-main">
+      <main className="max-w-[1200px] mx-auto px-6 py-8">
         {isAdmin ? renderAdminView() : renderEmployeeView()}
       </main>
     </div>
