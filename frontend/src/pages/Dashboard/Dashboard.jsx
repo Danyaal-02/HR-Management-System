@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navbar/Navbar'
 import EmployeeCard from '../../components/EmployeeCard/EmployeeCard'
+import AddEmployeeModal from '../../components/AddEmployeeModal/AddEmployeeModal'
 import './Dashboard.css'
 
 function Dashboard() {
   const { user, employees, checkedIn, checkInTime, toggleCheckIn } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const navigate = useNavigate()
+
+  const isAdmin = user?.role === 'HR'
 
   const handleCardClick = (id) => {
     // Navigate to employee view-only profile
@@ -103,6 +107,16 @@ function Dashboard() {
 
         {/* Filter / Search section */}
         <section className="dashboard-filters">
+          {isAdmin && (
+            <button
+              type="button"
+              className="dashboard-add-btn"
+              onClick={() => setIsAddModalOpen(true)}
+              id="dashboard-new-emp-btn"
+            >
+              NEW
+            </button>
+          )}
           <div className="dashboard-search">
             <svg
               width="18"
@@ -157,6 +171,11 @@ function Dashboard() {
           )}
         </section>
       </main>
+
+      <AddEmployeeModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
     </div>
   )
 }

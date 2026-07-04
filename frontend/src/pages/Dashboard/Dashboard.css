@@ -100,6 +100,29 @@
 /* Filters & Search */
 .dashboard-filters {
   margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard-add-btn {
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 0 24px;
+  height: 48px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-button);
+  transition: all var(--transition-normal);
+}
+
+.dashboard-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button-hover);
 }
 
 .dashboard-search {

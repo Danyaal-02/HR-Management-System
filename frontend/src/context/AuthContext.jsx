@@ -249,6 +249,76 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('hrms_employees', JSON.stringify(updatedEmployees))
   }
 
+  /**
+   * Add a new employee (admin action)
+   */
+  const addEmployee = (employeeData) => {
+    // Check for duplicate ID or email
+    const existingById = employees.find(
+      (emp) => emp.id.toLowerCase() === employeeData.employeeId.toLowerCase()
+    )
+    if (existingById) {
+      return { success: false, error: 'Employee ID already exists' }
+    }
+    const existingByEmail = employees.find(
+      (emp) => emp.email.toLowerCase() === employeeData.email.toLowerCase()
+    )
+    if (existingByEmail) {
+      return { success: false, error: 'Email already exists' }
+    }
+
+    const newEmployee = {
+      id: employeeData.employeeId,
+      name: employeeData.employeeId, // Default name to ID, can be edited later
+      role: employeeData.role,
+      password: employeeData.password,
+      company: user?.company || 'Odoo India',
+      department: 'General',
+      manager: user?.name || 'Admin',
+      email: employeeData.email,
+      mobile: '',
+      location: 'Gandhinagar, India',
+      status: 'absent',
+      profilePicture: '',
+      about: 'No bio added yet.',
+      loveAboutJob: 'Not defined yet.',
+      interestsHobbies: 'Not defined yet.',
+      skills: [],
+      certifications: [],
+      dob: '',
+      address: '',
+      nationality: 'Indian',
+      personalEmail: employeeData.email,
+      gender: '',
+      maritalStatus: '',
+      joiningDate: new Date().toISOString().split('T')[0],
+      bankDetails: {
+        accountNumber: '',
+        bankName: '',
+        ifscCode: '',
+        panNo: '',
+        uanNo: '',
+        empCode: employeeData.employeeId,
+      },
+      salary: {
+        wage: 30000,
+        workingDays: 5,
+        workingHours: 40,
+        basic: 15000,
+        hra: 7500,
+        standardAllowance: 4167,
+        performanceBonus: 2500,
+        leaveTravelAllowance: 2500,
+        fixedAllowance: -1667,
+      },
+    }
+
+    const updatedEmployees = [...employees, newEmployee]
+    setEmployees(updatedEmployees)
+    localStorage.setItem('hrms_employees', JSON.stringify(updatedEmployees))
+    return { success: true, employee: newEmployee }
+  }
+
   const updateEmployee = (id, updatedFields) => {
     const updatedEmployees = employees.map((emp) => {
       if (emp.id === id) {
@@ -475,6 +545,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         register,
         toggleCheckIn,
+        addEmployee,
         updateEmployee,
         getEmployeeAttendance,
         getAttendanceByDate,
