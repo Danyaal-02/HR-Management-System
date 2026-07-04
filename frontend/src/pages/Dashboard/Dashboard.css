@@ -1,0 +1,194 @@
+.dashboard-page {
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+}
+
+.dashboard-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Header layout */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.dashboard-header__title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.dashboard-header__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Check-In / Check-Out Widget */
+.checkin-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-normal);
+}
+
+.checkin-widget:hover {
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.checkin-widget__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkin-widget__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checkin-widget__time {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.checkin-widget__btn {
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-button);
+  transition: all var(--transition-normal);
+}
+
+.checkin-widget__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-button-hover);
+}
+
+.checkin-widget__btn--active {
+  background: linear-gradient(135deg, #ef4444, #f43f5e);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.checkin-widget__btn--active:hover {
+  box-shadow: 0 6px 25px rgba(239, 68, 68, 0.6);
+}
+
+/* Filters & Search */
+.dashboard-filters {
+  margin-bottom: 32px;
+}
+
+.dashboard-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  height: 48px;
+  max-width: 480px;
+  transition: all var(--transition-fast);
+}
+
+.dashboard-search:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+.dashboard-search svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.dashboard-search input {
+  flex: 1;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  border: none;
+  height: 100%;
+}
+
+.dashboard-search input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Employees Grid Container */
+.dashboard-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard-grid-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.dashboard-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.dashboard-empty-state svg {
+  color: var(--text-muted);
+}
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .checkin-widget {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .dashboard-search {
+    max-width: 100%;
+  }
+}
