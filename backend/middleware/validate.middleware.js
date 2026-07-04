@@ -1,11 +1,12 @@
 import { body, validationResult } from 'express-validator';
+import { COMMON_MESSAGES } from '../constants/messages.js';
 
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      message: 'Validation failed',
+      message: COMMON_MESSAGES.VALIDATION_FAILED,
       errors: errors.array().map((err) => ({ field: err.path, message: err.msg })),
     });
   }
