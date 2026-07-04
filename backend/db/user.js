@@ -111,7 +111,7 @@ export const findByVerificationToken = async (token) => {
   return rows[0] || null;
 };
 
-// Create a new user (called by Admin only)
+// Create a new user (called by Admin or during signup)
 export const createUser = async (userData) => {
   const {
     employee_id,
@@ -124,20 +124,21 @@ export const createUser = async (userData) => {
     department = null,
     designation = null,
     date_of_joining,
+    is_password_changed = 0,
     email_verification_token = null,
     email_verification_expires = null,
   } = userData;
 
   const sql = `
     INSERT INTO users 
-      (employee_id, first_name, last_name, email, password, role, phone, department, designation, date_of_joining, email_verification_token, email_verification_expires)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (employee_id, first_name, last_name, email, password, role, phone, department, designation, date_of_joining, is_password_changed, email_verification_token, email_verification_expires)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const [result] = await pool.query(sql, [
     employee_id, first_name, last_name, email, password,
     role, phone, department, designation, date_of_joining,
-    email_verification_token, email_verification_expires,
+    is_password_changed, email_verification_token, email_verification_expires,
   ]);
 
   return { id: result.insertId, employee_id, email, role };
