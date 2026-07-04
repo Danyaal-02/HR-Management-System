@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { useChangePassword } from '../../../hooks/useAuthApi'
 import './tabs.css'
 
 function SecurityTab() {
+  const changePasswordMutation = useChangePassword()
+
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -46,14 +49,22 @@ function SecurityTab() {
       return
     }
 
-    // Simulate save success
-    setSuccessMsg('Password updated successfully!')
-    setFormData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    })
-    setErrors({})
+    changePasswordMutation.mutate(
+      { current_password: formData.currentPassword, new_password: formData.newPassword },
+      {
+        onSuccess: (res) => {
+          if (res.success) {
+            setSuccessMsg('Password updated successfully!')
+            setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+            setErrors({})
+          }
+        },
+        onError: (err) => {
+          const msg = err?.response?.data?.message || 'Failed to update password.'
+          setErrors({ currentPassword: msg })
+        },
+      }
+    )
   }
 
   return (
@@ -205,8 +216,9 @@ function SecurityTab() {
           type="submit"
           className="auth-form__submit security-form__btn"
           id="sec-submit-btn"
+          disabled={changePasswordMutation.isPending}
         >
-          Update Password
+          {changePasswordMutation.isPending ? 'Updating…' : 'Update Password'}
         </button>
       </form>
     </div>

@@ -1,6 +1,13 @@
-import './EmployeeCard.css'
-
 function EmployeeCard({ employee, onClick }) {
+  // Support both old mock shape (name, profilePicture, status)
+  // and new API shape (first_name, last_name, profile_picture, today_status)
+  const displayName =
+    employee.name ||
+    `${employee.first_name || ''} ${employee.last_name || ''}`.trim() ||
+    'Unknown'
+  const avatarUrl = employee.profilePicture || employee.profile_picture || null
+  const status = employee.today_status || employee.status || 'absent'
+
   const getInitials = (name) => {
     if (!name) return '??'
     const parts = name.trim().split(/\s+/)
@@ -13,16 +20,16 @@ function EmployeeCard({ employee, onClick }) {
       case 'present':
         return (
           <div
-            className="employee-card__status employee-card__status--present"
+            className="absolute top-4 right-4 w-[22px] h-[22px] rounded-full flex items-center justify-center bg-[#181824] border border-border-color"
             title="Present in office"
           >
-            <span className="employee-card__status-dot"></span>
+            <span className="w-2 h-2 rounded-full bg-status-success shadow-[0_0_6px_#22c55e]"></span>
           </div>
         )
       case 'leave':
         return (
           <div
-            className="employee-card__status employee-card__status--leave"
+            className="absolute top-4 right-4 w-[22px] h-[22px] rounded-full flex items-center justify-center bg-[#181824] border border-border-color text-status-info"
             title="On Leave"
           >
             <svg
@@ -43,10 +50,10 @@ function EmployeeCard({ employee, onClick }) {
       default:
         return (
           <div
-            className="employee-card__status employee-card__status--absent"
+            className="absolute top-4 right-4 w-[22px] h-[22px] rounded-full flex items-center justify-center bg-[#181824] border border-border-color"
             title="Absent"
           >
-            <span className="employee-card__status-dot"></span>
+            <span className="w-2 h-2 rounded-full bg-status-warning shadow-[0_0_6px_#f59e0b]"></span>
           </div>
         )
     }
@@ -54,7 +61,7 @@ function EmployeeCard({ employee, onClick }) {
 
   return (
     <div
-      className="employee-card"
+      className="group relative bg-bg-card border border-border-color rounded-lg p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:-translate-y-1.5 hover:border-primary-purple/30 hover:shadow-[0_8px_24px_rgba(168,85,247,0.1),0_0_30px_rgba(168,85,247,0.15)] focus-visible:outline-2 focus-visible:outline-primary-purple focus-visible:outline-offset-2"
       onClick={() => onClick(employee.id)}
       id={`employee-card-${employee.id}`}
       role="button"
@@ -67,26 +74,26 @@ function EmployeeCard({ employee, onClick }) {
       }}
     >
       {/* Top right status badge */}
-      {getStatusIndicator(employee.status)}
+      {getStatusIndicator(status)}
 
-      <div className="employee-card__avatar-container">
-        {employee.profilePicture ? (
+      <div className="w-[72px] h-[72px] rounded-full overflow-hidden mb-4 border-2 border-border-color bg-bg-dark flex items-center justify-center transition-colors duration-300 group-hover:border-primary-purple">
+        {avatarUrl ? (
           <img
-            src={employee.profilePicture}
-            alt={employee.name}
-            className="employee-card__avatar-img"
+            src={avatarUrl}
+            alt={displayName}
+            className="w-full h-full object-cover"
           />
         ) : (
-          <div className="employee-card__avatar-placeholder">
-            {getInitials(employee.name)}
+          <div className="w-full h-full bg-gradient-to-br from-primary-purple/15 to-primary-pink/10 text-primary-purple flex items-center justify-center font-bold text-lg tracking-wide">
+            {getInitials(displayName)}
           </div>
         )}
       </div>
 
-      <div className="employee-card__info">
-        <h3 className="employee-card__name">{employee.name}</h3>
-        <p className="employee-card__role">{employee.role}</p>
-        <p className="employee-card__dept">{employee.department}</p>
+      <div className="flex flex-col gap-1">
+        <h3 className="font-bold text-[1.05rem] text-text-primary mb-1 tracking-tight">{displayName}</h3>
+        <p className="text-[0.85rem] font-medium text-text-secondary">{employee.role}</p>
+        <p className="text-[0.78rem] text-text-muted mt-1 uppercase tracking-wider font-semibold">{employee.department}</p>
       </div>
     </div>
   )

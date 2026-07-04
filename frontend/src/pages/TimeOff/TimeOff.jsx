@@ -1,105 +1,88 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useMyLeaves, useApplyLeave, useAdminLeaves, useApproveOrRejectLeave } from '../../hooks/useLeaveApi'
 import Navbar from '../../components/Navbar/Navbar'
 import './TimeOff.css'
 
 const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-const LEAVE_TYPES = ['Paid Leave', 'Sick Leave', 'Unpaid Leave']
+const LEAVE_TYPES = ['Paid Time Off', 'Sick Leave', 'Unpaid Leaves']
 
 function TimeOff() {
-  const {
-    user,
-    employees,
-    leaveRequests,
-    applyLeave,
-    updateLeaveStatus,
-    getEmployeeLeaves,
-    getPendingLeaves,
-    getAllLeaves,
-    getEmployeeAttendance,
-  } = useAuth()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const attachmentRef = useRef(null)
 
-  const isAdmin = user?.role === 'HR'
+  const now = new Date()
 
   // ===== Employee: Apply Leave Form =====
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    type: 'Paid Leave',
-    startDate: '',
-    endDate: '',
-    reason: '',
-  })
+  const [formData, setFormData] = useState({ type: 'Paid Time Off', startDate: '', endDate: '', remarks: '' })
+  const [attachmentFile, setAttachmentFile] = useState(null)
   const [formError, setFormError] = useState('')
 
   // ===== Calendar State =====
-  const [calMonth, setCalMonth] = useState(9) // October
-  const [calYear, setCalYear] = useState(2025)
+  const [calMonth, setCalMonth] = useState(now.getMonth())
+  const [calYear, setCalYear] = useState(now.getFullYear())
 
   // ===== Admin: Approval =====
   const [approvalComment, setApprovalComment] = useState({})
-  const [adminFilter, setAdminFilter] = useState('all') // 'all', 'pending', 'approved', 'rejected'
+  const [adminFilter, setAdminFilter] = useState('all')
 
-  // ===== Employee Leave History =====
-  const myLeaves = useMemo(() => {
-    if (!user) return []
-    return getEmployeeLeaves(user.id)
-  }, [user, getEmployeeLeaves])
+  // ─── TanStack Query hooks ──────────────────────────────────────────────────
+  const { data: myLeavesData, isLoading: loadingMyLeaves } = useMyLeaves({ enabled: !isAdmin && !!user })
+  const { data: adminLeavesData, isLoading: loadingAdminLeaves } = useAdminLeaves({ enabled: isAdmin })
 
-  // ===== Admin Data =====
-  const pendingLeaves = useMemo(() => getPendingLeaves(), [getPendingLeaves])
+  const applyLeaveMutation = useApplyLeave({
+    onSuccess: () => {
+      setShowForm(false)
+      setFormData({ type: 'Paid Time Off', startDate: '', endDate: '', remarks: '' })
+      setAttachmentFile(null)
+      setFormError('')
+    },
+    onError: (err) => {
+      setFormError(err?.response?.data?.message || 'Failed to submit leave request.')
+    },
+  })
 
-  const allLeaves = useMemo(() => {
-    const leaves = getAllLeaves()
-    if (adminFilter === 'all') return leaves
-    return leaves.filter((l) => l.status === adminFilter)
-  }, [adminFilter, getAllLeaves])
+  const approveRejectMutation = useApproveOrRejectLeave({
+    onSuccess: () => setApprovalComment({}),
+    onError: (err) => alert(err?.response?.data?.message || 'Action failed.'),
+  })
 
-  // ===== Calendar Data =====
+  // ─── Derived data ──────────────────────────────────────────────────────────
+  const myLeaves = myLeavesData?.leaves || []
+  const balances = myLeavesData?.balances || { paid: 0, sick: 0 }
+
+  const allAdminLeaves = adminLeavesData?.data || []
+  const pendingCount = allAdminLeaves.filter((l) => l.status === 'pending').length
+
+  const filteredAdminLeaves = useMemo(() => {
+    if (adminFilter === 'all') return allAdminLeaves
+    return allAdminLeaves.filter((l) => l.status === adminFilter)
+  }, [allAdminLeaves, adminFilter])
+
+  // ─── Calendar data (from approved leaves) ─────────────────────────────────
   const calendarData = useMemo(() => {
-    if (!user) return {}
-
     const data = {}
-    const logs = getEmployeeAttendance(user.id, calMonth, calYear)
-
-    // Mark present days
-    logs.forEach((log) => {
-      const day = new Date(log.date).getDate()
-      data[day] = 'present'
-    })
-
-    // Mark leave days (approved)
-    const empLeaves = leaveRequests.filter(
-      (lr) => lr.employeeId === user.id && lr.status === 'approved'
-    )
-
-    empLeaves.forEach((lr) => {
-      const start = new Date(lr.startDate)
-      const end = new Date(lr.endDate)
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
-          data[d.getDate()] = 'leave'
+    myLeaves
+      .filter((lr) => lr.status === 'approved')
+      .forEach((lr) => {
+        const start = new Date(lr.start_date + 'T00:00:00')
+        const end = new Date(lr.end_date + 'T00:00:00')
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
+            data[d.getDate()] = 'leave'
+          }
         }
-      }
-    })
-
+      })
     return data
-  }, [user, calMonth, calYear, leaveRequests, getEmployeeAttendance])
+  }, [myLeaves, calMonth, calYear])
 
-  // ===== Handlers =====
+  // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleApplyLeave = (e) => {
     e.preventDefault()
     setFormError('')
@@ -112,109 +95,81 @@ function TimeOff() {
       setFormError('End date must be after start date.')
       return
     }
-    if (!formData.reason.trim()) {
+    if (!formData.remarks.trim()) {
       setFormError('Please provide a reason for leave.')
       return
     }
 
-    // Calculate days
-    const start = new Date(formData.startDate)
-    const end = new Date(formData.endDate)
-    let days = 0
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (d.getDay() !== 0 && d.getDay() !== 6) days++
-    }
+    const fd = new FormData()
+    fd.append('leave_type', formData.type)
+    fd.append('start_date', formData.startDate)
+    fd.append('end_date', formData.endDate)
+    fd.append('remarks', formData.remarks)
+    if (attachmentFile) fd.append('attachment', attachmentFile)
 
-    applyLeave({
-      type: formData.type,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      days,
-      reason: formData.reason.trim(),
-    })
-
-    setFormData({ type: 'Paid Leave', startDate: '', endDate: '', reason: '' })
-    setShowForm(false)
+    applyLeaveMutation.mutate(fd)
   }
 
-  const handleApprove = (requestId) => {
-    const comment = approvalComment[requestId] || ''
-    updateLeaveStatus(requestId, 'approved', comment)
-    setApprovalComment((prev) => ({ ...prev, [requestId]: '' }))
+  const handleApprove = (id) => {
+    approveRejectMutation.mutate({ id, status: 'approved', admin_comment: approvalComment[id] || '' })
+    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
   }
 
-  const handleReject = (requestId) => {
-    const comment = approvalComment[requestId] || ''
-    updateLeaveStatus(requestId, 'rejected', comment)
-    setApprovalComment((prev) => ({ ...prev, [requestId]: '' }))
+  const handleReject = (id) => {
+    approveRejectMutation.mutate({ id, status: 'rejected', admin_comment: approvalComment[id] || '' })
+    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
   }
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'approved':
-        return 'timeoff-status--approved'
-      case 'rejected':
-        return 'timeoff-status--rejected'
-      case 'pending':
-        return 'timeoff-status--pending'
-      default:
-        return ''
+      case 'approved': return 'timeoff-status--approved'
+      case 'rejected': return 'timeoff-status--rejected'
+      case 'pending':  return 'timeoff-status--pending'
+      default:         return ''
     }
   }
 
   const getLeaveTypeClass = (type) => {
-    switch (type) {
-      case 'Paid Leave':
-        return 'timeoff-type--paid'
-      case 'Sick Leave':
-        return 'timeoff-type--sick'
-      case 'Unpaid Leave':
-        return 'timeoff-type--unpaid'
-      default:
-        return ''
-    }
+    if (!type) return ''
+    const t = type.toLowerCase()
+    if (t.includes('paid')) return 'timeoff-type--paid'
+    if (t.includes('sick')) return 'timeoff-type--sick'
+    if (t.includes('unpaid')) return 'timeoff-type--unpaid'
+    return ''
+  }
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    return dateStr.split('T')[0]
   }
 
   // ===== Calendar Rendering =====
   const renderCalendar = () => {
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
-    const firstDay = new Date(calYear, calMonth, 1).getDay() // 0=Sun
+    const firstDay = new Date(calYear, calMonth, 1).getDay()
     const days = []
 
-    // Empty cells for days before the 1st
     for (let i = 0; i < firstDay; i++) {
-      days.push(
-        <div
-          key={`empty-${i}`}
-          className="timeoff-cal-day timeoff-cal-day--empty"
-        ></div>
-      )
+      days.push(<div key={`empty-${i}`} className="timeoff-cal-day timeoff-cal-day--empty"></div>)
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dayOfWeek = new Date(calYear, calMonth, d).getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       const status = calendarData[d] || (isWeekend ? 'weekend' : 'absent')
-
       days.push(
-        <div
-          key={d}
-          className={`timeoff-cal-day timeoff-cal-day--${status}`}
-          title={status.charAt(0).toUpperCase() + status.slice(1)}
-        >
+        <div key={d} className={`timeoff-cal-day timeoff-cal-day--${status}`} title={status.charAt(0).toUpperCase() + status.slice(1)}>
           {d}
         </div>
       )
     }
-
     return days
   }
 
-  const getInitials = (name) => {
-    if (!name) return '??'
-    const parts = name.trim().split(/\s+/)
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  const getInitials = (firstName, lastName) => {
+    const f = (firstName || '')[0] || ''
+    const l = (lastName || '')[0] || ''
+    return (f + l).toUpperCase() || '??'
   }
 
   // ===== EMPLOYEE VIEW =====
@@ -222,39 +177,30 @@ function TimeOff() {
     <div className="timeoff-employee" id="timeoff-employee-view">
       {/* Header with Apply Button */}
       <div className="timeoff-header">
-        <h2 className="timeoff-title">Time Off</h2>
-        <button
-          className="timeoff-apply-btn"
-          onClick={() => setShowForm(!showForm)}
-          id="timeoff-apply-btn"
-        >
+        <div>
+          <h2 className="timeoff-title">Time Off</h2>
+          {/* Leave balance pills */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
+            <span style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 600 }}>
+              🟣 Paid Leave: {balances.paid} days
+            </span>
+            <span style={{ background: 'rgba(251,146,60,0.15)', color: '#fb923c', padding: '4px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 600 }}>
+              🟠 Sick Leave: {balances.sick} days
+            </span>
+          </div>
+        </div>
+        <button className="timeoff-apply-btn" onClick={() => setShowForm(!showForm)} id="timeoff-apply-btn">
           {showForm ? (
             <>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
               Cancel
             </>
           ) : (
             <>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Apply for Leave
             </>
@@ -273,63 +219,53 @@ function TimeOff() {
                 <select
                   id="leave-type"
                   value={formData.type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="timeoff-form-input"
                 >
-                  {LEAVE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
+                  {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="timeoff-form-group">
                 <label htmlFor="leave-start">Start Date</label>
-                <input
-                  id="leave-start"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                  className="timeoff-form-input"
-                />
+                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="timeoff-form-input" />
               </div>
               <div className="timeoff-form-group">
                 <label htmlFor="leave-end">End Date</label>
-                <input
-                  id="leave-end"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  className="timeoff-form-input"
-                />
+                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="timeoff-form-input" />
               </div>
             </div>
             <div className="timeoff-form-group" style={{ marginTop: '16px' }}>
               <label htmlFor="leave-reason">Reason / Comments</label>
               <textarea
                 id="leave-reason"
-                value={formData.reason}
-                onChange={(e) =>
-                  setFormData({ ...formData, reason: e.target.value })
-                }
+                value={formData.remarks}
+                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
                 className="timeoff-form-input timeoff-form-textarea"
                 placeholder="Please provide a reason for your leave request..."
                 rows="3"
               />
             </div>
+            {formData.type === 'Sick Leave' && (
+              <div className="timeoff-form-group" style={{ marginTop: '16px' }}>
+                <label htmlFor="leave-attachment">Medical Certificate (required for Sick Leave)</label>
+                <input
+                  id="leave-attachment"
+                  type="file"
+                  ref={attachmentRef}
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setAttachmentFile(e.target.files[0] || null)}
+                  className="timeoff-form-input"
+                />
+              </div>
+            )}
             {formError && <p className="timeoff-form-error">{formError}</p>}
             <button
               type="submit"
               className="timeoff-form-submit"
               id="timeoff-submit-btn"
+              disabled={applyLeaveMutation.isPending}
             >
-              Submit Request
+              {applyLeaveMutation.isPending ? 'Submitting…' : 'Submit Request'}
             </button>
           </form>
         </div>
@@ -340,118 +276,56 @@ function TimeOff() {
         {/* Calendar */}
         <div className="timeoff-calendar-card" id="timeoff-calendar">
           <div className="timeoff-calendar-header">
-            <button
-              className="timeoff-cal-nav-btn"
-              onClick={() => {
-                if (calMonth === 0) {
-                  setCalMonth(11)
-                  setCalYear(calYear - 1)
-                } else setCalMonth(calMonth - 1)
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+            <button className="timeoff-cal-nav-btn" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
-            <span className="timeoff-calendar-month">
-              {MONTHS[calMonth]} {calYear}
-            </span>
-            <button
-              className="timeoff-cal-nav-btn"
-              onClick={() => {
-                if (calMonth === 11) {
-                  setCalMonth(0)
-                  setCalYear(calYear + 1)
-                } else setCalMonth(calMonth + 1)
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+            <span className="timeoff-calendar-month">{MONTHS[calMonth]} {calYear}</span>
+            <button className="timeoff-cal-nav-btn" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
           <div className="timeoff-cal-weekdays">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="timeoff-cal-weekday">
-                {d}
-              </div>
+              <div key={d} className="timeoff-cal-weekday">{d}</div>
             ))}
           </div>
           <div className="timeoff-cal-grid">{renderCalendar()}</div>
           <div className="timeoff-cal-legend">
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--present"></span>
-              Present
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--leave"></span>
-              Leave
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--absent"></span>
-              Absent
-            </div>
-            <div className="timeoff-cal-legend-item">
-              <span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--weekend"></span>
-              Weekend
-            </div>
+            <div className="timeoff-cal-legend-item"><span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--present"></span>Present</div>
+            <div className="timeoff-cal-legend-item"><span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--leave"></span>Leave</div>
+            <div className="timeoff-cal-legend-item"><span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--absent"></span>Absent</div>
+            <div className="timeoff-cal-legend-item"><span className="timeoff-cal-legend-dot timeoff-cal-legend-dot--weekend"></span>Weekend</div>
           </div>
         </div>
 
         {/* Leave History */}
         <div className="timeoff-history-card" id="timeoff-history">
           <h3 className="timeoff-history-title">My Leave History</h3>
-          {myLeaves.length > 0 ? (
+          {loadingMyLeaves ? (
+            <p className="timeoff-empty-msg">Loading…</p>
+          ) : myLeaves.length > 0 ? (
             <div className="timeoff-history-list">
               {myLeaves.map((lr) => (
                 <div key={lr.id} className="timeoff-history-item">
                   <div className="timeoff-history-item__top">
-                    <span
-                      className={`timeoff-type-badge ${getLeaveTypeClass(lr.type)}`}
-                    >
-                      {lr.type}
+                    <span className={`timeoff-type-badge ${getLeaveTypeClass(lr.leave_type)}`}>
+                      {lr.leave_type}
                     </span>
-                    <span
-                      className={`timeoff-status-badge ${getStatusClass(lr.status)}`}
-                    >
+                    <span className={`timeoff-status-badge ${getStatusClass(lr.status)}`}>
                       {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
                     </span>
                   </div>
                   <div className="timeoff-history-item__dates">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
+                      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    {lr.startDate} → {lr.endDate} ({lr.days} day
-                    {lr.days > 1 ? 's' : ''})
+                    {formatDate(lr.start_date)} → {formatDate(lr.end_date)} ({lr.days_requested} day{lr.days_requested > 1 ? 's' : ''})
                   </div>
-                  <p className="timeoff-history-item__reason">{lr.reason}</p>
-                  {lr.approverComment && (
+                  <p className="timeoff-history-item__reason">{lr.remarks}</p>
+                  {lr.admin_comment && (
                     <p className="timeoff-history-item__comment">
-                      <strong>Admin:</strong> {lr.approverComment}
+                      <strong>Admin:</strong> {lr.admin_comment}
                     </p>
                   )}
                 </div>
@@ -479,10 +353,8 @@ function TimeOff() {
               id={`timeoff-filter-${filter}`}
             >
               {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              {filter === 'pending' && pendingLeaves.length > 0 && (
-                <span className="timeoff-filter-badge">
-                  {pendingLeaves.length}
-                </span>
+              {filter === 'pending' && pendingCount > 0 && (
+                <span className="timeoff-filter-badge">{pendingCount}</span>
               )}
             </button>
           ))}
@@ -504,125 +376,77 @@ function TimeOff() {
             </tr>
           </thead>
           <tbody>
-            {allLeaves.length > 0 ? (
-              allLeaves.map((lr) => {
-                const emp = employees.find((e) => e.id === lr.employeeId)
-                return (
-                  <tr
-                    key={lr.id}
-                    className={
-                      lr.status === 'pending' ? 'timeoff-row--pending' : ''
-                    }
-                  >
-                    <td>
-                      <div className="timeoff-emp-cell">
-                        {emp?.profilePicture ? (
-                          <img
-                            src={emp.profilePicture}
-                            alt={emp?.name}
-                            className="timeoff-emp-avatar"
-                          />
-                        ) : (
-                          <div className="timeoff-emp-avatar-placeholder">
-                            {getInitials(emp?.name || lr.employeeName)}
-                          </div>
-                        )}
-                        <div className="timeoff-emp-info">
-                          <span className="timeoff-emp-name">
-                            {lr.employeeName}
-                          </span>
-                          <span className="timeoff-emp-dept">
-                            {emp?.department || ''}
-                          </span>
+            {loadingAdminLeaves ? (
+              <tr><td colSpan="7" className="timeoff-table-empty">Loading…</td></tr>
+            ) : filteredAdminLeaves.length > 0 ? (
+              filteredAdminLeaves.map((lr) => (
+                <tr key={lr.id} className={lr.status === 'pending' ? 'timeoff-row--pending' : ''}>
+                  <td>
+                    <div className="timeoff-emp-cell">
+                      <div className="timeoff-emp-avatar-placeholder">
+                        {getInitials(lr.first_name, lr.last_name)}
+                      </div>
+                      <div className="timeoff-emp-info">
+                        <span className="timeoff-emp-name">{lr.first_name} {lr.last_name}</span>
+                        <span className="timeoff-emp-dept">{lr.employee_id}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`timeoff-type-badge ${getLeaveTypeClass(lr.leave_type)}`}>
+                      {lr.leave_type}
+                    </span>
+                  </td>
+                  <td className="timeoff-dates-cell">{formatDate(lr.start_date)} → {formatDate(lr.end_date)}</td>
+                  <td><span className="timeoff-days-badge">{lr.days_requested}</span></td>
+                  <td className="timeoff-reason-cell">{lr.remarks}</td>
+                  <td>
+                    <span className={`timeoff-status-badge ${getStatusClass(lr.status)}`}>
+                      {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
+                    </span>
+                  </td>
+                  <td>
+                    {lr.status === 'pending' ? (
+                      <div className="timeoff-actions">
+                        <input
+                          type="text"
+                          placeholder="Comment..."
+                          value={approvalComment[lr.id] || ''}
+                          onChange={(e) => setApprovalComment((prev) => ({ ...prev, [lr.id]: e.target.value }))}
+                          className="timeoff-action-comment"
+                        />
+                        <div className="timeoff-action-btns">
+                          <button
+                            className="timeoff-action-btn timeoff-action-btn--approve"
+                            onClick={() => handleApprove(lr.id)}
+                            title="Approve"
+                            disabled={approveRejectMutation.isPending}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </button>
+                          <button
+                            className="timeoff-action-btn timeoff-action-btn--reject"
+                            onClick={() => handleReject(lr.id)}
+                            title="Reject"
+                            disabled={approveRejectMutation.isPending}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <span
-                        className={`timeoff-type-badge ${getLeaveTypeClass(lr.type)}`}
-                      >
-                        {lr.type}
-                      </span>
-                    </td>
-                    <td className="timeoff-dates-cell">
-                      {lr.startDate} → {lr.endDate}
-                    </td>
-                    <td>
-                      <span className="timeoff-days-badge">{lr.days}</span>
-                    </td>
-                    <td className="timeoff-reason-cell">{lr.reason}</td>
-                    <td>
-                      <span
-                        className={`timeoff-status-badge ${getStatusClass(lr.status)}`}
-                      >
-                        {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
-                      </span>
-                    </td>
-                    <td>
-                      {lr.status === 'pending' ? (
-                        <div className="timeoff-actions">
-                          <input
-                            type="text"
-                            placeholder="Comment..."
-                            value={approvalComment[lr.id] || ''}
-                            onChange={(e) =>
-                              setApprovalComment((prev) => ({
-                                ...prev,
-                                [lr.id]: e.target.value,
-                              }))
-                            }
-                            className="timeoff-action-comment"
-                          />
-                          <div className="timeoff-action-btns">
-                            <button
-                              className="timeoff-action-btn timeoff-action-btn--approve"
-                              onClick={() => handleApprove(lr.id)}
-                              title="Approve"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                              >
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            </button>
-                            <button
-                              className="timeoff-action-btn timeoff-action-btn--reject"
-                              onClick={() => handleReject(lr.id)}
-                              title="Reject"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                              >
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="timeoff-action-done">
-                          {lr.approverComment || '—'}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })
+                    ) : (
+                      <span className="timeoff-action-done">{lr.admin_comment || '—'}</span>
+                    )}
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
-                <td colSpan="7" className="timeoff-table-empty">
-                  No leave requests found for the selected filter.
-                </td>
+                <td colSpan="7" className="timeoff-table-empty">No leave requests found for the selected filter.</td>
               </tr>
             )}
           </tbody>

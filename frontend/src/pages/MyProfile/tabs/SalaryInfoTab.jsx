@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../../context/AuthContext'
+import { useMyAttendance } from '../../../hooks/useAttendanceApi'
 import './tabs.css'
 
 const MONTHS = [
@@ -18,8 +18,6 @@ const MONTHS = [
 ]
 
 function SalaryInfoTab({ employee, onUpdate, readOnly = false }) {
-  const { getMonthlyStats } = useAuth()
-
   const [wage, setWage] = useState(employee?.salary?.wage || 50000)
   const [workingDays, setWorkingDays] = useState(
     employee?.salary?.workingDays || 5
@@ -45,8 +43,25 @@ function SalaryInfoTab({ employee, onUpdate, readOnly = false }) {
   const [payslipMonth, setPayslipMonth] = useState(9) // October
   const [payslipYear, setPayslipYear] = useState(2025)
 
-  const stats = employee
-    ? getMonthlyStats(employee.id, payslipMonth, payslipYear)
+  // Build date range for the selected payslip month
+  const startDate = `${payslipYear}-${String(payslipMonth + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(payslipYear, payslipMonth + 1, 0).getDate()
+  const endDate = `${payslipYear}-${String(payslipMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
+  // Fetch attendance data for the selected month (employee's own stats)
+  const { data: attendanceData } = useMyAttendance(
+    { startDate, endDate },
+    { enabled: !!employee }
+  )
+
+  const summary = attendanceData?.summary
+  const stats = summary
+    ? {
+        presentDays: summary.days_present || 0,
+        leaveDays: summary.days_leave || 0,
+        totalWorkingDays: summary.total_working_days || 30,
+        payableDays: (summary.days_present || 0) + (summary.days_leave || 0),
+      }
     : { presentDays: 0, leaveDays: 0, totalWorkingDays: 30, payableDays: 30 }
   const payableDays = stats.payableDays
   const grossSalaryPayable = Math.round((wage / 30) * payableDays)

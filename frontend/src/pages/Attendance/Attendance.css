@@ -450,3 +450,21 @@
     justify-content: center;
   }
 }
+
+/* ── Status badges (shared with TimeOff styles) ── */
+.timeoff-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.timeoff-status--present   { background: rgba(52,211,153,0.15); color: #34d399; }
+.timeoff-status--absent    { background: rgba(248,113,113,0.15); color: #f87171; }
+.timeoff-status--half-day  { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.timeoff-status--leave     { background: rgba(99,102,241,0.15); color: #818cf8; }
+.timeoff-status--pending   { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.timeoff-status--approved  { background: rgba(52,211,153,0.15); color: #34d399; }
+.timeoff-status--rejected  { background: rgba(248,113,113,0.15); color: #f87171; }
+
