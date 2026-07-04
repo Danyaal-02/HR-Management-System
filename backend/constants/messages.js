@@ -48,3 +48,11 @@ export const LEAVE_MESSAGES = {
   SICK_LEAVE_CERT_REQUIRED: 'Medical certificate attachment is required for sick leave requests.',
   OVERLAPPING_LEAVE: 'You have already applied for leave during these dates.',
 };
+
+export const PAYROLL_MESSAGES = {
+  PAYROLL_GENERATED: 'Payslip generated successfully.',
+  PAYSLIP_NOT_FOUND: 'Payslip not found.',
+  NO_SALARY_STRUCTURE: 'Please configure salary structure for this employee before generating payslip.',
+  INVALID_MONTH_YEAR: 'Invalid month or year.',
+  ACCESS_DENIED_PAYSLIP: 'Access denied. You can only view your own payslips.',
+};
