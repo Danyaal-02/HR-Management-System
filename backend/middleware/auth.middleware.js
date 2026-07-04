@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { findById } from '../db/user.js';
+import { AUTH_MESSAGES } from '../constants/messages.js';
 
 // Protect routes — requires valid JWT
 export const protect = async (req, res, next) => {
@@ -11,21 +12,21 @@ export const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return res.status(401).json({ success: false, message: 'Not authorized, no token provided' });
+      return res.status(401).json({ success: false, message: AUTH_MESSAGES.NOT_AUTHORIZED_NO_TOKEN });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await findById(decoded.id);
     if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+      return res.status(401).json({ success: false, message: AUTH_MESSAGES.USER_NOT_FOUND });
     }
 
     const { password, ...userWithoutPassword } = user;
     req.user = userWithoutPassword;
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: 'Not authorized, token invalid' });
+    return res.status(401).json({ success: false, message: AUTH_MESSAGES.NOT_AUTHORIZED_INVALID_TOKEN });
   }
 };
 
@@ -35,7 +36,7 @@ export const authorize = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: `Role '${req.user.role}' is not authorized to access this route`,
+        message: AUTH_MESSAGES.ROLE_NOT_AUTHORIZED(req.user.role),
       });
     }
     next();

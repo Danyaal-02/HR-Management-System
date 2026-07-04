@@ -9,6 +9,7 @@ import {
   getSalaryByUserId,
   createOrUpdateSalary,
 } from '../db/profile.js';
+import { PROFILE_MESSAGES, COMMON_MESSAGES } from '../constants/messages.js';
 
 const parseNumericSetting = (val, defaultValue) => {
   if (val === undefined || val === null || val === '') return defaultValue;
@@ -119,13 +120,13 @@ export const getProfile = async (req, res) => {
     if (requestUserRole !== 'admin' && requestUserId !== targetUserId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. You can only view your own profile.',
+        message: PROFILE_MESSAGES.ACCESS_DENIED_VIEW,
       });
     }
 
     const user = await findById(targetUserId);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: PROFILE_MESSAGES.USER_NOT_FOUND });
     }
 
     const profile = await getProfileByUserId(targetUserId);
@@ -155,7 +156,7 @@ export const getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('Get profile error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -171,13 +172,13 @@ export const updateProfile = async (req, res) => {
     if (requestUserRole !== 'admin' && requestUserId !== targetUserId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. You can only edit your own profile.',
+        message: PROFILE_MESSAGES.ACCESS_DENIED_EDIT,
       });
     }
 
     const user = await findById(targetUserId);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: PROFILE_MESSAGES.USER_NOT_FOUND });
     }
 
     // Extracted payload fields
@@ -213,22 +214,29 @@ export const updateProfile = async (req, res) => {
       await updateUser(targetUserId, userUpdates);
     }
 
-    // 2. Update Employee Profiles Table
+    // 2. Update Employee Profiles Table (Fields allowed depending on Role)
     const profileUpdates = {};
-    if (dob) profileUpdates.dob = dob;
-    if (residing_address) profileUpdates.residing_address = residing_address;
-    if (nationality) profileUpdates.nationality = nationality;
-    if (personal_email) profileUpdates.personal_email = personal_email;
-    if (gender) profileUpdates.gender = gender;
-    if (marital_status) profileUpdates.marital_status = marital_status;
-    if (about) profileUpdates.about = about;
-    if (interests_hobbies) profileUpdates.interests_hobbies = interests_hobbies;
-
-    if (account_number) profileUpdates.account_number = account_number;
-    if (bank_name) profileUpdates.bank_name = bank_name;
-    if (ifsc_code) profileUpdates.ifsc_code = ifsc_code;
-    if (pan_no) profileUpdates.pan_no = pan_no;
-    if (uan_no) profileUpdates.uan_no = uan_no;
+    if (requestUserRole === 'admin') {
+      if (dob) profileUpdates.dob = dob;
+      if (residing_address) profileUpdates.residing_address = residing_address;
+      if (nationality) profileUpdates.nationality = nationality;
+      if (personal_email) profileUpdates.personal_email = personal_email;
+      if (gender) profileUpdates.gender = gender;
+      if (marital_status) profileUpdates.marital_status = marital_status;
+      if (about) profileUpdates.about = about;
+      if (interests_hobbies) profileUpdates.interests_hobbies = interests_hobbies;
+      if (account_number) profileUpdates.account_number = account_number;
+      if (bank_name) profileUpdates.bank_name = bank_name;
+      if (ifsc_code) profileUpdates.ifsc_code = ifsc_code;
+      if (pan_no) profileUpdates.pan_no = pan_no;
+      if (uan_no) profileUpdates.uan_no = uan_no;
+    } else {
+      // Employees can only edit non-sensitive fields
+      if (residing_address) profileUpdates.residing_address = residing_address;
+      if (personal_email) profileUpdates.personal_email = personal_email;
+      if (about) profileUpdates.about = about;
+      if (interests_hobbies) profileUpdates.interests_hobbies = interests_hobbies;
+    }
 
     // Handle Cloudinary resume upload
     if (req.files && req.files['resume']) {
@@ -267,11 +275,11 @@ export const updateProfile = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
+      message: PROFILE_MESSAGES.PROFILE_UPDATED,
     });
   } catch (error) {
     console.error('Update profile error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -283,7 +291,7 @@ export const updateSalary = async (req, res) => {
 
     const user = await findById(targetUserId);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: PROFILE_MESSAGES.USER_NOT_FOUND });
     }
 
     const {
@@ -303,7 +311,7 @@ export const updateSalary = async (req, res) => {
     } = req.body;
 
     if (month_wage === undefined) {
-      return res.status(400).json({ success: false, message: 'Month wage is required' });
+      return res.status(400).json({ success: false, message: PROFILE_MESSAGES.MONTH_WAGE_REQUIRED });
     }
 
     const computed = calculateSalaryDetails(month_wage, {
@@ -341,12 +349,12 @@ export const updateSalary = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Salary details updated successfully',
+      message: PROFILE_MESSAGES.SALARY_UPDATED,
       data: computed,
     });
   } catch (error) {
     console.error('Update salary error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -383,6 +391,6 @@ export const getDashboardEmployees = async (req, res) => {
     });
   } catch (error) {
     console.error('Get employees list error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };

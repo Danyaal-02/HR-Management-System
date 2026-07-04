@@ -7,6 +7,7 @@ import {
 import { createCompany } from '../db/company.js';
 import { generateToken } from '../utils/generateToken.js';
 import { sendVerificationEmail, sendEmployeeWelcomeEmail } from '../utils/sendMail.js';
+import { AUTH_MESSAGES, COMMON_MESSAGES } from '../constants/messages.js';
 
 // POST /api/auth/signup — Admin self-registers
 export const signup = async (req, res) => {
@@ -15,7 +16,7 @@ export const signup = async (req, res) => {
 
     const existingEmail = await findByEmail(email);
     if (existingEmail) {
-      return res.status(409).json({ success: false, message: 'Email is already registered' });
+      return res.status(409).json({ success: false, message: AUTH_MESSAGES.EMAIL_REGISTERED });
     }
 
     const date_of_joining = new Date().toISOString().split('T')[0];
@@ -43,7 +44,7 @@ export const signup = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please verify your email.',
+      message: AUTH_MESSAGES.ACCOUNT_CREATED_VERIFY,
       data: {
         id: newUser.id,
         employee_id: newUser.employee_id,
@@ -54,7 +55,7 @@ export const signup = async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -64,7 +65,7 @@ export const verifyEmail = async (req, res) => {
     const { token } = req.params;
     const user = await findByVerificationToken(token);
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+      return res.status(400).json({ success: false, message: AUTH_MESSAGES.INVALID_VERIFY_TOKEN });
     }
 
     await updateUser(user.id, {
@@ -73,10 +74,10 @@ export const verifyEmail = async (req, res) => {
       email_verification_expires: null,
     });
 
-    return res.status(200).json({ success: true, message: 'Email verified successfully. You can now login.' });
+    return res.status(200).json({ success: true, message: AUTH_MESSAGES.EMAIL_VERIFIED });
   } catch (error) {
     console.error('Verify email error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -89,16 +90,16 @@ export const login = async (req, res) => {
     if (!user) user = await findByEmail(login_id);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: AUTH_MESSAGES.INVALID_CREDENTIALS });
     }
 
     if (!user.is_email_verified) {
-      return res.status(403).json({ success: false, message: 'Please verify your email before logging in' });
+      return res.status(403).json({ success: false, message: AUTH_MESSAGES.EMAIL_VERIFY_PENDING });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: AUTH_MESSAGES.INVALID_CREDENTIALS });
     }
 
     const token = generateToken({ id: user.id, role: user.role });
@@ -106,12 +107,12 @@ export const login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: AUTH_MESSAGES.LOGIN_SUCCESS,
       data: { ...safeUser, must_change_password: !user.is_password_changed, token },
     });
   } catch (error) {
     console.error('Login error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -122,7 +123,7 @@ export const createEmployee = async (req, res) => {
 
     const existingEmail = await findByEmail(email);
     if (existingEmail) {
-      return res.status(409).json({ success: false, message: 'Email is already registered' });
+      return res.status(409).json({ success: false, message: AUTH_MESSAGES.EMAIL_REGISTERED });
     }
 
     const employee_id = await generateEmployeeId(first_name, last_name, date_of_joining);
@@ -145,7 +146,7 @@ export const createEmployee = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Employee created successfully',
+      message: AUTH_MESSAGES.EMPLOYEE_CREATED,
       data: {
         id: newUser.id, employee_id: newUser.employee_id,
         email: newUser.email, role: newUser.role,
@@ -155,7 +156,7 @@ export const createEmployee = async (req, res) => {
     });
   } catch (error) {
     console.error('Create employee error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -165,19 +166,19 @@ export const changePassword = async (req, res) => {
     const { current_password, new_password } = req.body;
     const user = await findById(req.user.id);
 
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!user) return res.status(404).json({ success: false, message: AUTH_MESSAGES.USER_NOT_FOUND });
 
     const isMatch = await bcrypt.compare(current_password, user.password);
-    if (!isMatch) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    if (!isMatch) return res.status(401).json({ success: false, message: AUTH_MESSAGES.PASSWORD_INCORRECT });
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(new_password, salt);
 
     await updateUser(user.id, { password: hashedPassword, is_password_changed: 1 });
 
-    return res.status(200).json({ success: true, message: 'Password changed successfully' });
+    return res.status(200).json({ success: true, message: AUTH_MESSAGES.PASSWORD_CHANGED });
   } catch (error) {
     console.error('Change password error:', error.message);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: COMMON_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
