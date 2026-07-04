@@ -152,15 +152,15 @@
   .navbar__container {
     padding: 0 16px;
   }
-  
+
   .navbar__left {
     gap: 20px;
   }
-  
+
   .navbar__links {
     gap: 10px;
   }
-  
+
   .navbar__link {
     padding: 4px 8px;
     font-size: 0.85rem;

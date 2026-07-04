@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import './tabs.css';
+import { useState, useEffect } from 'react'
+import './tabs.css'
 
 function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
   const [formData, setFormData] = useState({
@@ -16,12 +16,13 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
     panNo: employee?.bankDetails?.panNo || '',
     uanNo: employee?.bankDetails?.uanNo || '',
     empCode: employee?.bankDetails?.empCode || '',
-  });
+  })
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     if (employee) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         dob: employee.dob || '',
         address: employee.address || '',
@@ -36,14 +37,14 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
         panNo: employee.bankDetails?.panNo || '',
         uanNo: employee.bankDetails?.uanNo || '',
         empCode: employee.bankDetails?.empCode || '',
-      });
+      })
     }
-  }, [employee]);
+  }, [employee])
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSave = () => {
     onUpdate({
@@ -62,9 +63,9 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
         uanNo: formData.uanNo,
         empCode: formData.empCode,
       },
-    });
-    setIsEditing(false);
-  };
+    })
+    setIsEditing(false)
+  }
 
   const handleCancel = () => {
     setFormData({
@@ -81,31 +82,46 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
       panNo: employee.bankDetails?.panNo || '',
       uanNo: employee.bankDetails?.uanNo || '',
       empCode: employee.bankDetails?.empCode || '',
-    });
-    setIsEditing(false);
-  };
+    })
+    setIsEditing(false)
+  }
 
-  const renderField = (label, name, type = 'text', isSelect = false, options = []) => {
-    const isFieldReadOnly = readOnly || !isEditing;
+  const renderField = (
+    label,
+    name,
+    type = 'text',
+    isSelect = false,
+    options = []
+  ) => {
+    const isFieldReadOnly = readOnly || !isEditing
 
     if (isFieldReadOnly) {
-      let displayValue = formData[name];
+      let displayValue = formData[name]
       if (name === 'dob' || name === 'joiningDate') {
-        displayValue = formData[name] ? new Date(formData[name]).toLocaleDateString() : '';
+        displayValue = formData[name]
+          ? new Date(formData[name]).toLocaleDateString()
+          : ''
       }
       return (
         <div className="private-field-view">
           <span className="private-field-view__label">{label}</span>
-          <span className="private-field-view__value">{displayValue || '—'}</span>
+          <span className="private-field-view__value">
+            {displayValue || '—'}
+          </span>
         </div>
-      );
+      )
     }
 
     if (isSelect) {
       return (
         <div className="private-field-edit">
           <label htmlFor={`edit-field-${name}`}>{label}</label>
-          <select id={`edit-field-${name}`} name={name} value={formData[name]} onChange={handleChange}>
+          <select
+            id={`edit-field-${name}`}
+            name={name}
+            value={formData[name]}
+            onChange={handleChange}
+          >
             <option value="">Select...</option>
             {options.map((opt) => (
               <option key={opt} value={opt}>
@@ -114,16 +130,22 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
             ))}
           </select>
         </div>
-      );
+      )
     }
 
     return (
       <div className="private-field-edit">
         <label htmlFor={`edit-field-${name}`}>{label}</label>
-        <input id={`edit-field-${name}`} type={type} name={name} value={formData[name]} onChange={handleChange} />
+        <input
+          id={`edit-field-${name}`}
+          type={type}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+        />
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="profile-tab-content private-tab">
@@ -131,11 +153,29 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
         <div className="private-tab__header-actions">
           {isEditing ? (
             <>
-              <button type="button" className="tab-action-btn tab-action-btn--save" onClick={handleSave}>Save Changes</button>
-              <button type="button" className="tab-action-btn tab-action-btn--cancel" onClick={handleCancel}>Cancel</button>
+              <button
+                type="button"
+                className="tab-action-btn tab-action-btn--save"
+                onClick={handleSave}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                className="tab-action-btn tab-action-btn--cancel"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
             </>
           ) : (
-            <button type="button" className="tab-action-btn tab-action-btn--edit" onClick={() => setIsEditing(true)}>Edit Profile Info</button>
+            <button
+              type="button"
+              className="tab-action-btn tab-action-btn--edit"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Profile Info
+            </button>
           )}
         </div>
       )}
@@ -149,15 +189,26 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
             {renderField('Residing Address', 'address')}
             {renderField('Nationality', 'nationality')}
             {renderField('Personal Email', 'personalEmail', 'email')}
-            {renderField('Gender', 'gender', 'text', true, ['Male', 'Female', 'Other'])}
-            {renderField('Marital Status', 'maritalStatus', 'text', true, ['Single', 'Married', 'Divorced', 'Widowed'])}
+            {renderField('Gender', 'gender', 'text', true, [
+              'Male',
+              'Female',
+              'Other',
+            ])}
+            {renderField('Marital Status', 'maritalStatus', 'text', true, [
+              'Single',
+              'Married',
+              'Divorced',
+              'Widowed',
+            ])}
             {renderField('Date of Joining', 'joiningDate', 'date')}
           </div>
         </div>
 
         {/* Bank Details Column */}
         <div className="private-tab__column">
-          <h3 className="private-tab__column-title">Bank & Identification Details</h3>
+          <h3 className="private-tab__column-title">
+            Bank & Identification Details
+          </h3>
           <div className="private-tab__fields">
             {renderField('Account Number', 'accountNumber')}
             {renderField('Bank Name', 'bankName')}
@@ -169,7 +220,7 @@ function PrivateInfoTab({ employee, onUpdate, readOnly = false }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default PrivateInfoTab;
+export default PrivateInfoTab

@@ -15,8 +15,17 @@
       "about": "Experienced HR Lead with a demonstrated history of working in the software industry. Skilled in talent acquisition, employee relations, and performance management.",
       "loveAboutJob": "The opportunity to connect with diverse minds every day, helping them grow within the organization and building a supportive culture.",
       "interestsHobbies": "Reading, playing chess, exploring new hiking trails, and volunteering.",
-      "skills": ["Talent Acquisition", "Employee Engagement", "Strategic HR", "Conflict Resolution", "Performance Management"],
-      "certifications": ["SHRM Certified Professional (SHRM-CP)", "PHR Certification"],
+      "skills": [
+        "Talent Acquisition",
+        "Employee Engagement",
+        "Strategic HR",
+        "Conflict Resolution",
+        "Performance Management"
+      ],
+      "certifications": [
+        "SHRM Certified Professional (SHRM-CP)",
+        "PHR Certification"
+      ],
       "dob": "1990-05-15",
       "address": "402, Skyline Apartments, Sargasan, Gandhinagar - 382421",
       "nationality": "Indian",
@@ -59,8 +68,17 @@
       "about": "Frontend Engineer passionate about creating intuitive user interfaces. Proficient in React, JavaScript, and modern CSS frameworks.",
       "loveAboutJob": "Solving complex UI challenges and collaborating with design and product teams to deliver beautiful interfaces.",
       "interestsHobbies": "Photography, painting, playing acoustic guitar, and cycling.",
-      "skills": ["React.js", "JavaScript", "HTML5/CSS3", "Git Version Control", "Webpack"],
-      "certifications": ["AWS Certified Cloud Practitioner", "Scrum Alliance Certified Developer"],
+      "skills": [
+        "React.js",
+        "JavaScript",
+        "HTML5/CSS3",
+        "Git Version Control",
+        "Webpack"
+      ],
+      "certifications": [
+        "AWS Certified Cloud Practitioner",
+        "Scrum Alliance Certified Developer"
+      ],
       "dob": "1994-08-22",
       "address": "B-305, Orchid Residency, Kudasan, Gandhinagar - 382421",
       "nationality": "Indian",
@@ -147,8 +165,17 @@
       "about": "UI/UX Designer committed to creating user-centric digital products. Skilled in wireframing, prototyping, and user testing.",
       "loveAboutJob": "Translating complex functional requirements into beautiful, understandable, and delightful screens.",
       "interestsHobbies": "Sketching, photography, coffee brewing, and traveling.",
-      "skills": ["Figma", "UI/UX Design", "Wireframing", "Prototyping", "User Research"],
-      "certifications": ["Google UX Design Certificate", "Interaction Design Foundation Certified"],
+      "skills": [
+        "Figma",
+        "UI/UX Design",
+        "Wireframing",
+        "Prototyping",
+        "User Research"
+      ],
+      "certifications": [
+        "Google UX Design Certificate",
+        "Interaction Design Foundation Certified"
+      ],
       "dob": "1996-03-30",
       "address": "A-102, Green Valley, Infocity, Gandhinagar - 382421",
       "nationality": "Indian",
@@ -178,91 +205,501 @@
     }
   ],
   "attendanceLogs": [
-    { "employeeId": "OIJODO20220001", "date": "2025-10-01", "checkIn": "09:30", "checkOut": "18:45" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-02", "checkIn": "09:15", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-03", "checkIn": "09:00", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-06", "checkIn": "09:45", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-07", "checkIn": "10:00", "checkOut": "19:15" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-08", "checkIn": "09:30", "checkOut": "18:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-09", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-10", "checkIn": "09:30", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-13", "checkIn": "09:15", "checkOut": "18:45" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-14", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-15", "checkIn": "09:30", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-16", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-17", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-20", "checkIn": "09:00", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-21", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-22", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-23", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-24", "checkIn": "09:30", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-27", "checkIn": "09:15", "checkOut": "18:45" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-28", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-29", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-30", "checkIn": "09:00", "checkOut": "19:00" },
-    { "employeeId": "OIJODO20220001", "date": "2025-10-31", "checkIn": "09:30", "checkOut": "18:00" },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-01",
+      "checkIn": "09:30",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-02",
+      "checkIn": "09:15",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-03",
+      "checkIn": "09:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-06",
+      "checkIn": "09:45",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-07",
+      "checkIn": "10:00",
+      "checkOut": "19:15"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-08",
+      "checkIn": "09:30",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-09",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-10",
+      "checkIn": "09:30",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-13",
+      "checkIn": "09:15",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-14",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-15",
+      "checkIn": "09:30",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-16",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-17",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-20",
+      "checkIn": "09:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-21",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-22",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-23",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-24",
+      "checkIn": "09:30",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-27",
+      "checkIn": "09:15",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-28",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-29",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-30",
+      "checkIn": "09:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJODO20220001",
+      "date": "2025-10-31",
+      "checkIn": "09:30",
+      "checkOut": "18:00"
+    },
 
-    { "employeeId": "OIJASM20230002", "date": "2025-10-01", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-02", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-03", "checkIn": "10:15", "checkOut": "19:15" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-06", "checkIn": "09:45", "checkOut": "18:45" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-07", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-08", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-09", "checkIn": "10:00", "checkOut": "18:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-10", "checkIn": "09:45", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-13", "checkIn": "10:00", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-14", "checkIn": "09:30", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-15", "checkIn": "10:00", "checkOut": "18:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-16", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-17", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-20", "checkIn": "09:45", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-21", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-22", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-23", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-24", "checkIn": "10:00", "checkOut": "18:00" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-27", "checkIn": "09:30", "checkOut": "18:45" },
-    { "employeeId": "OIJASM20230002", "date": "2025-10-28", "checkIn": "10:00", "checkOut": "19:00" },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-01",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-02",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-03",
+      "checkIn": "10:15",
+      "checkOut": "19:15"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-06",
+      "checkIn": "09:45",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-07",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-08",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-09",
+      "checkIn": "10:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-10",
+      "checkIn": "09:45",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-13",
+      "checkIn": "10:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-14",
+      "checkIn": "09:30",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-15",
+      "checkIn": "10:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-16",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-17",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-20",
+      "checkIn": "09:45",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-21",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-22",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-23",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-24",
+      "checkIn": "10:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-27",
+      "checkIn": "09:30",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OIJASM20230002",
+      "date": "2025-10-28",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
 
-    { "employeeId": "OIALPA20230003", "date": "2025-10-01", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-02", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-03", "checkIn": "09:15", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-06", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-07", "checkIn": "09:30", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-08", "checkIn": "09:00", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-09", "checkIn": "09:30", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-10", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-13", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-14", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-15", "checkIn": "09:15", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-16", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-17", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-20", "checkIn": "09:00", "checkOut": "18:00" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-21", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OIALPA20230003", "date": "2025-10-22", "checkIn": "09:00", "checkOut": "18:00" },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-01",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-02",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-03",
+      "checkIn": "09:15",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-06",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-07",
+      "checkIn": "09:30",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-08",
+      "checkIn": "09:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-09",
+      "checkIn": "09:30",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-10",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-13",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-14",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-15",
+      "checkIn": "09:15",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-16",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-17",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-20",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-21",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OIALPA20230003",
+      "date": "2025-10-22",
+      "checkIn": "09:00",
+      "checkOut": "18:00"
+    },
 
-    { "employeeId": "OISHA20240004", "date": "2025-10-01", "checkIn": "09:45", "checkOut": "18:45" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-02", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-03", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-06", "checkIn": "09:45", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-07", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-08", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-09", "checkIn": "09:45", "checkOut": "18:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-10", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-13", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-14", "checkIn": "09:45", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-15", "checkIn": "10:00", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-16", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-17", "checkIn": "09:45", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-20", "checkIn": "10:00", "checkOut": "18:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-21", "checkIn": "09:30", "checkOut": "18:45" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-22", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-23", "checkIn": "09:30", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-24", "checkIn": "09:45", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-27", "checkIn": "10:00", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-28", "checkIn": "09:30", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-29", "checkIn": "09:45", "checkOut": "18:30" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-30", "checkIn": "10:00", "checkOut": "19:00" },
-    { "employeeId": "OISHA20240004", "date": "2025-10-31", "checkIn": "09:30", "checkOut": "18:30" }
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-01",
+      "checkIn": "09:45",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-02",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-03",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-06",
+      "checkIn": "09:45",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-07",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-08",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-09",
+      "checkIn": "09:45",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-10",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-13",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-14",
+      "checkIn": "09:45",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-15",
+      "checkIn": "10:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-16",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-17",
+      "checkIn": "09:45",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-20",
+      "checkIn": "10:00",
+      "checkOut": "18:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-21",
+      "checkIn": "09:30",
+      "checkOut": "18:45"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-22",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-23",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-24",
+      "checkIn": "09:45",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-27",
+      "checkIn": "10:00",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-28",
+      "checkIn": "09:30",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-29",
+      "checkIn": "09:45",
+      "checkOut": "18:30"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-30",
+      "checkIn": "10:00",
+      "checkOut": "19:00"
+    },
+    {
+      "employeeId": "OISHA20240004",
+      "date": "2025-10-31",
+      "checkIn": "09:30",
+      "checkOut": "18:30"
+    }
   ],
   "leaveRequests": [
     {

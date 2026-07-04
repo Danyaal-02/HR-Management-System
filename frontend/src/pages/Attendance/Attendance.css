@@ -423,7 +423,7 @@
   .attendance-stats {
     grid-template-columns: 1fr;
   }
-  
+
   .attendance-controls {
     flex-direction: column;
     align-items: flex-start;
@@ -434,7 +434,7 @@
     padding: 10px 12px;
     font-size: 0.82rem;
   }
-  
+
   .attendance-search-container {
     max-width: 100%;
   }

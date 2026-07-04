@@ -1,62 +1,64 @@
-import { useState } from 'react';
-import './tabs.css';
+import { useState } from 'react'
+import './tabs.css'
 
 function ResumeTab({ employee, onUpdate, readOnly = false }) {
-  const [newSkill, setNewSkill] = useState('');
-  const [newCert, setNewCert] = useState('');
-  const [isEditingAbout, setIsEditingAbout] = useState(false);
-  const [aboutText, setAboutText] = useState(employee?.about || '');
-  const [isEditingLove, setIsEditingLove] = useState(false);
-  const [loveText, setLoveText] = useState(employee?.loveAboutJob || '');
-  const [isEditingHobbies, setIsEditingHobbies] = useState(false);
-  const [hobbiesText, setHobbiesText] = useState(employee?.interestsHobbies || '');
+  const [newSkill, setNewSkill] = useState('')
+  const [newCert, setNewCert] = useState('')
+  const [isEditingAbout, setIsEditingAbout] = useState(false)
+  const [aboutText, setAboutText] = useState(employee?.about || '')
+  const [isEditingLove, setIsEditingLove] = useState(false)
+  const [loveText, setLoveText] = useState(employee?.loveAboutJob || '')
+  const [isEditingHobbies, setIsEditingHobbies] = useState(false)
+  const [hobbiesText, setHobbiesText] = useState(
+    employee?.interestsHobbies || ''
+  )
 
   const handleAddSkill = (e) => {
-    e.preventDefault();
-    if (!newSkill.trim()) return;
-    const currentSkills = employee.skills || [];
+    e.preventDefault()
+    if (!newSkill.trim()) return
+    const currentSkills = employee.skills || []
     if (!currentSkills.includes(newSkill.trim())) {
-      onUpdate({ skills: [...currentSkills, newSkill.trim()] });
+      onUpdate({ skills: [...currentSkills, newSkill.trim()] })
     }
-    setNewSkill('');
-  };
+    setNewSkill('')
+  }
 
   const handleRemoveSkill = (skillToRemove) => {
-    if (readOnly) return;
-    const currentSkills = employee.skills || [];
-    onUpdate({ skills: currentSkills.filter(s => s !== skillToRemove) });
-  };
+    if (readOnly) return
+    const currentSkills = employee.skills || []
+    onUpdate({ skills: currentSkills.filter((s) => s !== skillToRemove) })
+  }
 
   const handleAddCert = (e) => {
-    e.preventDefault();
-    if (!newCert.trim()) return;
-    const currentCerts = employee.certifications || [];
+    e.preventDefault()
+    if (!newCert.trim()) return
+    const currentCerts = employee.certifications || []
     if (!currentCerts.includes(newCert.trim())) {
-      onUpdate({ certifications: [...currentCerts, newCert.trim()] });
+      onUpdate({ certifications: [...currentCerts, newCert.trim()] })
     }
-    setNewCert('');
-  };
+    setNewCert('')
+  }
 
   const handleRemoveCert = (certToRemove) => {
-    if (readOnly) return;
-    const currentCerts = employee.certifications || [];
-    onUpdate({ certifications: currentCerts.filter(c => c !== certToRemove) });
-  };
+    if (readOnly) return
+    const currentCerts = employee.certifications || []
+    onUpdate({ certifications: currentCerts.filter((c) => c !== certToRemove) })
+  }
 
   const handleSaveAbout = () => {
-    onUpdate({ about: aboutText });
-    setIsEditingAbout(false);
-  };
+    onUpdate({ about: aboutText })
+    setIsEditingAbout(false)
+  }
 
   const handleSaveLove = () => {
-    onUpdate({ loveAboutJob: loveText });
-    setIsEditingLove(false);
-  };
+    onUpdate({ loveAboutJob: loveText })
+    setIsEditingLove(false)
+  }
 
   const handleSaveHobbies = () => {
-    onUpdate({ interestsHobbies: hobbiesText });
-    setIsEditingHobbies(false);
-  };
+    onUpdate({ interestsHobbies: hobbiesText })
+    setIsEditingHobbies(false)
+  }
 
   return (
     <div className="profile-tab-content resume-tab">
@@ -66,8 +68,8 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
           <div className="resume-section__header">
             <h3>About</h3>
             {!readOnly && !isEditingAbout && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="resume-section__edit-btn"
                 onClick={() => setIsEditingAbout(true)}
                 id="edit-about-btn"
@@ -85,12 +87,29 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
                 rows="4"
               />
               <div className="resume-section__actions">
-                <button type="button" className="resume-section__save" onClick={handleSaveAbout}>Save</button>
-                <button type="button" className="resume-section__cancel" onClick={() => { setAboutText(employee.about || ''); setIsEditingAbout(false); }}>Cancel</button>
+                <button
+                  type="button"
+                  className="resume-section__save"
+                  onClick={handleSaveAbout}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="resume-section__cancel"
+                  onClick={() => {
+                    setAboutText(employee.about || '')
+                    setIsEditingAbout(false)
+                  }}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           ) : (
-            <p className="resume-section__text">{employee?.about || 'No description provided.'}</p>
+            <p className="resume-section__text">
+              {employee?.about || 'No description provided.'}
+            </p>
           )}
         </div>
 
@@ -99,8 +118,8 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
           <div className="resume-section__header">
             <h3>What I love about my job</h3>
             {!readOnly && !isEditingLove && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="resume-section__edit-btn"
                 onClick={() => setIsEditingLove(true)}
                 id="edit-love-btn"
@@ -118,12 +137,29 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
                 rows="4"
               />
               <div className="resume-section__actions">
-                <button type="button" className="resume-section__save" onClick={handleSaveLove}>Save</button>
-                <button type="button" className="resume-section__cancel" onClick={() => { setLoveText(employee.loveAboutJob || ''); setIsEditingLove(false); }}>Cancel</button>
+                <button
+                  type="button"
+                  className="resume-section__save"
+                  onClick={handleSaveLove}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="resume-section__cancel"
+                  onClick={() => {
+                    setLoveText(employee.loveAboutJob || '')
+                    setIsEditingLove(false)
+                  }}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           ) : (
-            <p className="resume-section__text">{employee?.loveAboutJob || 'No description provided.'}</p>
+            <p className="resume-section__text">
+              {employee?.loveAboutJob || 'No description provided.'}
+            </p>
           )}
         </div>
 
@@ -132,8 +168,8 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
           <div className="resume-section__header">
             <h3>My interests and hobbies</h3>
             {!readOnly && !isEditingHobbies && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="resume-section__edit-btn"
                 onClick={() => setIsEditingHobbies(true)}
                 id="edit-hobbies-btn"
@@ -151,12 +187,29 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
                 rows="4"
               />
               <div className="resume-section__actions">
-                <button type="button" className="resume-section__save" onClick={handleSaveHobbies}>Save</button>
-                <button type="button" className="resume-section__cancel" onClick={() => { setHobbiesText(employee.interestsHobbies || ''); setIsEditingHobbies(false); }}>Cancel</button>
+                <button
+                  type="button"
+                  className="resume-section__save"
+                  onClick={handleSaveHobbies}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="resume-section__cancel"
+                  onClick={() => {
+                    setHobbiesText(employee.interestsHobbies || '')
+                    setIsEditingHobbies(false)
+                  }}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           ) : (
-            <p className="resume-section__text">{employee?.interestsHobbies || 'No description provided.'}</p>
+            <p className="resume-section__text">
+              {employee?.interestsHobbies || 'No description provided.'}
+            </p>
           )}
         </div>
       </div>
@@ -165,7 +218,7 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
         {/* Skills Section */}
         <div className="resume-section">
           <h3 className="resume-section__side-title">Skills</h3>
-          
+
           <div className="skills-list">
             {employee?.skills?.length === 0 ? (
               <p className="resume-section__empty">No skills listed yet.</p>
@@ -189,7 +242,11 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
           </div>
 
           {!readOnly && (
-            <form onSubmit={handleAddSkill} className="resume-section__add-form" id="add-skill-form">
+            <form
+              onSubmit={handleAddSkill}
+              className="resume-section__add-form"
+              id="add-skill-form"
+            >
               <input
                 type="text"
                 placeholder="Add a skill..."
@@ -197,7 +254,9 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
                 onChange={(e) => setNewSkill(e.target.value)}
                 id="add-skill-input"
               />
-              <button type="submit" id="add-skill-btn">+ Add Skill</button>
+              <button type="submit" id="add-skill-btn">
+                + Add Skill
+              </button>
             </form>
           )}
         </div>
@@ -205,10 +264,12 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
         {/* Certifications Section */}
         <div className="resume-section">
           <h3 className="resume-section__side-title">Certifications</h3>
-          
+
           <ul className="certifications-list">
             {employee?.certifications?.length === 0 ? (
-              <p className="resume-section__empty">No certifications listed yet.</p>
+              <p className="resume-section__empty">
+                No certifications listed yet.
+              </p>
             ) : (
               employee?.certifications?.map((cert, index) => (
                 <li key={index} className="certification-item">
@@ -232,7 +293,11 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
           </ul>
 
           {!readOnly && (
-            <form onSubmit={handleAddCert} className="resume-section__add-form" id="add-cert-form">
+            <form
+              onSubmit={handleAddCert}
+              className="resume-section__add-form"
+              id="add-cert-form"
+            >
               <input
                 type="text"
                 placeholder="Add a certification..."
@@ -240,13 +305,15 @@ function ResumeTab({ employee, onUpdate, readOnly = false }) {
                 onChange={(e) => setNewCert(e.target.value)}
                 id="add-cert-input"
               />
-              <button type="submit" id="add-cert-btn">+ Add Cert</button>
+              <button type="submit" id="add-cert-btn">
+                + Add Cert
+              </button>
             </form>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default ResumeTab;
+export default ResumeTab
