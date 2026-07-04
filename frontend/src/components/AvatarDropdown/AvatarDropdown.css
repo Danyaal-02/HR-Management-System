@@ -6,7 +6,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.5),
+    var(--shadow-glow);
   z-index: 1000;
   padding: 8px 0;
   animation: dropdownAppear 0.2s cubic-bezier(0.16, 1, 0.3, 1);

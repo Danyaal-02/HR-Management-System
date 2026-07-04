@@ -185,7 +185,7 @@
     align-items: flex-start;
     gap: 32px;
   }
-  
+
   .profile-header-card__details {
     width: 100%;
     max-width: 100%;
@@ -196,18 +196,18 @@
   .profile-header-card {
     padding: 24px;
   }
-  
+
   .profile-header-card__details {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
-  
+
   .profile-tabs-nav {
     overflow-x: auto;
     white-space: nowrap;
     gap: 4px;
   }
-  
+
   .profile-tab-btn {
     padding: 10px 14px;
     font-size: 0.88rem;

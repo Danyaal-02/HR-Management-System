@@ -565,7 +565,7 @@
   .resume-tab {
     grid-template-columns: 1fr;
   }
-  
+
   .salary-tables-container {
     grid-template-columns: 1fr;
   }
@@ -576,7 +576,7 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .salary-summary-card {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
@@ -717,4 +717,3 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-

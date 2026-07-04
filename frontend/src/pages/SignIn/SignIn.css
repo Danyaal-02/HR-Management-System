@@ -46,7 +46,11 @@
 .auth-bg-orb--2 {
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(217, 70, 239, 0.25), transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(217, 70, 239, 0.25),
+    transparent 70%
+  );
   bottom: -80px;
   left: -80px;
   animation-delay: -7s;
@@ -63,10 +67,19 @@
 }
 
 @keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.05); }
-  50% { transform: translate(-20px, 20px) scale(0.95); }
-  75% { transform: translate(15px, 15px) scale(1.02); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(15px, 15px) scale(1.02);
+  }
 }
 
 /* ===== Auth Container ===== */
@@ -103,7 +116,11 @@
   align-items: center;
   justify-content: center;
   padding: 48px 40px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(217, 70, 239, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.08),
+    rgba(217, 70, 239, 0.05)
+  );
   border-right: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
@@ -116,13 +133,22 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 30% 40%, rgba(168, 85, 247, 0.06), transparent 50%);
+  background: radial-gradient(
+    circle at 30% 40%,
+    rgba(168, 85, 247, 0.06),
+    transparent 50%
+  );
   animation: brandingPulse 8s ease-in-out infinite;
 }
 
 @keyframes brandingPulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .auth-branding__content {
@@ -138,8 +164,13 @@
 }
 
 @keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .auth-branding__title {
@@ -372,7 +403,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -405,7 +436,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== Footer Link ===== */

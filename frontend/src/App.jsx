@@ -1,12 +1,17 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import SignIn from './pages/SignIn/SignIn';
-import SignUp from './pages/SignUp/SignUp';
-import Dashboard from './pages/Dashboard/Dashboard';
-import MyProfile from './pages/MyProfile/MyProfile';
-import EmployeeProfile from './pages/EmployeeProfile/EmployeeProfile';
-import Attendance from './pages/Attendance/Attendance';
-import TimeOff from './pages/TimeOff/TimeOff';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import SignIn from './pages/SignIn/SignIn'
+import SignUp from './pages/SignUp/SignUp'
+import Dashboard from './pages/Dashboard/Dashboard'
+import MyProfile from './pages/MyProfile/MyProfile'
+import EmployeeProfile from './pages/EmployeeProfile/EmployeeProfile'
+import Attendance from './pages/Attendance/Attendance'
+import TimeOff from './pages/TimeOff/TimeOff'
 
 function App() {
   return (
@@ -26,7 +31,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -182,12 +182,12 @@
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .checkin-widget {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .dashboard-search {
     max-width: 100%;
   }
