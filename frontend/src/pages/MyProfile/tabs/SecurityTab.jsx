@@ -88,7 +88,7 @@ function SecurityTab() {
               Current Password
             </label>
             <div
-              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.currentPassword ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.currentPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
                 className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"
@@ -132,7 +132,7 @@ function SecurityTab() {
               New Password
             </label>
             <div
-              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.newPassword ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.newPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
                 className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"
@@ -174,7 +174,7 @@ function SecurityTab() {
               Confirm New Password
             </label>
             <div
-              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.confirmPassword ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}
+              className={`group relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.confirmPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
             >
               <svg
                 className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within:text-primary-purple"

@@ -94,10 +94,6 @@ function TimeOff() {
       setFormError('End date must be after start date.')
       return
     }
-    if (formData.type === 'Sick Leave' && !attachmentFile) {
-      setFormError('Medical certificate is required for Sick Leave.')
-      return
-    }
     if (!formData.remarks.trim()) {
       setFormError('Please provide a reason for leave.')
       return
@@ -153,26 +149,22 @@ function TimeOff() {
     const days = []
 
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="aspect-square flex items-center justify-center text-[0.82rem] font-medium rounded-sm transition-all duration-200 cursor-default bg-transparent"></div>)
+      days.push(<div key={`empty-${i}`} className="aspect-square flex items-center justify-center bg-transparent"></div>)
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dayOfWeek = new Date(calYear, calMonth, d).getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       const status = calendarData[d] || (isWeekend ? 'weekend' : 'absent')
-      let dayStatusClass = ''
-      if (status === 'present') {
-        dayStatusClass = 'bg-status-success/15 text-status-success font-semibold'
-      } else if (status === 'leave') {
-        dayStatusClass = 'bg-status-warning/15 text-status-warning font-semibold'
-      } else if (status === 'absent') {
-        dayStatusClass = 'bg-status-error/8 text-text-muted'
-      } else if (status === 'weekend') {
-        dayStatusClass = 'bg-text-muted/8 text-text-muted opacity-60'
-      }
+      
+      let dayBgClass = 'bg-transparent'
+      if (status === 'present') dayBgClass = 'bg-status-success/15 text-status-success font-semibold'
+      else if (status === 'leave') dayBgClass = 'bg-status-warning/15 text-status-warning font-semibold'
+      else if (status === 'absent') dayBgClass = 'bg-status-error/8 text-text-muted'
+      else if (status === 'weekend') dayBgClass = 'bg-[rgba(107,107,128,0.08)] text-text-muted opacity-60'
 
       days.push(
-        <div key={d} className={`aspect-square flex items-center justify-center text-[0.82rem] font-medium rounded-sm transition-all duration-200 cursor-default ${dayStatusClass}`} title={status.charAt(0).toUpperCase() + status.slice(1)}>
+        <div key={d} className={`aspect-square flex items-center justify-center text-[0.82rem] font-medium rounded-sm transition-all duration-200 cursor-default ${dayBgClass}`} title={status.charAt(0).toUpperCase() + status.slice(1)}>
           {d}
         </div>
       )
@@ -190,7 +182,7 @@ function TimeOff() {
   const renderEmployeeView = () => (
     <div className="flex flex-col gap-6" id="timeoff-employee-view">
       {/* Header with Apply Button */}
-      <div className="flex items-center justify-between gap-4 mb-7 flex-wrap">
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Time Off</h2>
           {/* Leave balance pills */}
@@ -198,12 +190,12 @@ function TimeOff() {
             <span className="bg-primary-purple/15 text-primary-purple px-3 py-1 rounded-full text-[13px] font-semibold">
               🟣 Paid Leave: {balances.paid} days
             </span>
-            <span className="bg-[#fb923c]/15 text-[#fb923c] px-3 py-1 rounded-full text-[13px] font-semibold">
-              🟠 Sick Leave: {balances.sick} days
+            <span className="bg-status-warning/15 text-status-warning px-3 py-1 rounded-full text-[13px] font-semibold">
+              乘 Sick Leave: {balances.sick} days
             </span>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white rounded-md font-semibold text-sm transition-all duration-200 shadow-button hover:-translate-y-0.5 hover:shadow-button-hover active:translate-y-0" onClick={() => setShowForm(!showForm)} id="timeoff-apply-btn">
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white rounded-md font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0" onClick={() => setShowForm(!showForm)} id="timeoff-apply-btn">
           {showForm ? (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -224,58 +216,58 @@ function TimeOff() {
 
       {/* Apply Leave Form */}
       {showForm && (
-        <div className="bg-bg-card border border-border-color rounded-lg p-7 mb-7 animate-slide-down" id="timeoff-apply-form">
-          <h3 className="text-[1.1rem] font-semibold text-text-primary mb-5">New Leave Request</h3>
+        <div className="bg-bg-card border border-border-color rounded-lg p-7 mb-7 animate-[slideDown_0.3s_ease-out]" id="timeoff-apply-form">
+          <h3 className="text-[1.1rem] font-semibold text-text-primary mb-5 font-bold">New Leave Request</h3>
           <form onSubmit={handleApplyLeave}>
-            <div className="grid grid-cols-3 max-md:grid-cols-1 gap-4">
+            <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]" htmlFor="leave-type">Leave Type</label>
+                <label htmlFor="leave-type" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Leave Type</label>
                 <select
                   id="leave-type"
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-sm transition-all duration-200 focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none"
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200"
                 >
                   {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]" htmlFor="leave-start">Start Date</label>
-                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-sm transition-all duration-200 focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none" />
+                <label htmlFor="leave-start" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Start Date</label>
+                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]" htmlFor="leave-end">End Date</label>
-                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-sm transition-all duration-200 focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none" />
+                <label htmlFor="leave-end" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">End Date</label>
+                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5 mt-4">
-              <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]" htmlFor="leave-reason">Reason / Comments</label>
+              <label htmlFor="leave-reason" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Reason / Comments</label>
               <textarea
                 id="leave-reason"
                 value={formData.remarks}
                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-sm transition-all duration-200 focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none resize-y min-h-[80px]"
+                className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none resize-vertical min-h-[80px] transition-all duration-200"
                 placeholder="Please provide a reason for your leave request..."
                 rows="3"
               />
             </div>
             {formData.type === 'Sick Leave' && (
               <div className="flex flex-col gap-1.5 mt-4">
-                <label className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]" htmlFor="leave-attachment">Medical Certificate (required for Sick Leave)</label>
+                <label htmlFor="leave-attachment" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Medical Certificate (required for Sick Leave)</label>
                 <input
                   id="leave-attachment"
                   type="file"
                   ref={attachmentRef}
                   accept="image/*,application/pdf"
                   onChange={(e) => setAttachmentFile(e.target.files[0] || null)}
-                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-sm transition-all duration-200 focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none"
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:outline-none transition-all duration-200"
                 />
               </div>
             )}
             {formError && <p className="text-status-error text-[0.85rem] mt-2.5">{formError}</p>}
             <button
               type="submit"
-              className="mt-4 px-7 py-2.5 bg-gradient-primary text-white rounded-sm font-semibold text-sm transition-all duration-200 shadow-button hover:-translate-y-0.5 hover:shadow-button-hover active:translate-y-0 disabled:opacity-60"
+              className="mt-4 px-7 py-2.5 bg-gradient-primary text-white rounded-sm font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
               id="timeoff-submit-btn"
               disabled={applyLeaveMutation.isPending}
             >
@@ -286,21 +278,21 @@ function TimeOff() {
       )}
 
       {/* Calendar + History Layout */}
-      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-6">
+      <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
         {/* Calendar */}
-        <div className="bg-bg-card border border-border-color rounded-lg p-6" id="timeoff-calendar">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex flex-col" id="timeoff-calendar">
           <div className="flex items-center justify-between mb-5">
-            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary transition-all duration-200 hover:border-primary-purple hover:text-primary-purple" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
-            <span className="text-base font-bold text-text-primary">{MONTHS[calMonth]} {calYear}</span>
-            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary transition-all duration-200 hover:border-primary-purple hover:text-primary-purple" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
+            <span className="text-[1rem] font-bold text-text-primary">{MONTHS[calMonth]} {calYear}</span>
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
           <div className="grid grid-cols-7 mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="text-center text-[0.72rem] font-semibold text-text-muted uppercase tracking-[0.5px] py-1.5">{d}</div>
+              <div key={d} className="text-center text-sans text-[0.72rem] font-semibold text-text-muted uppercase tracking-wider py-1.5">{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>
@@ -308,13 +300,13 @@ function TimeOff() {
             <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-success/50"></span>Present</div>
             <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-warning/50"></span>Leave</div>
             <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-status-error/30"></span>Absent</div>
-            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-text-muted/30"></span>Weekend</div>
+            <div className="flex items-center gap-1.5 text-[0.78rem] text-text-secondary"><span className="w-2.5 h-2.5 rounded-[3px] bg-[rgba(107,107,128,0.3)]"></span>Weekend</div>
           </div>
         </div>
 
         {/* Leave History */}
-        <div className="bg-bg-card border border-border-color rounded-lg p-6 max-h-[550px] overflow-y-auto scrollbar-thin scrollbar-thumb-border-color scrollbar-track-transparent" id="timeoff-history">
-          <h3 className="text-base font-bold text-text-primary mb-4">My Leave History</h3>
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 max-h-[550px] overflow-y-auto flex flex-col" id="timeoff-history">
+          <h3 className="text-[1rem] font-bold text-text-primary mb-4">My Leave History</h3>
           {loadingMyLeaves ? (
             <p className="text-text-muted italic text-center py-6">Loading…</p>
           ) : myLeaves.length > 0 ? (
@@ -322,10 +314,10 @@ function TimeOff() {
               {myLeaves.map((lr) => (
                 <div key={lr.id} className="bg-bg-input border border-border-color rounded-md p-4 transition-all duration-200 hover:border-primary-purple/30">
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
                       {lr.leave_type}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(lr.status)}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
                       {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
                     </span>
                   </div>
@@ -336,9 +328,9 @@ function TimeOff() {
                     </svg>
                     {formatDate(lr.start_date)} → {formatDate(lr.end_date)} ({lr.days_requested} day{lr.days_requested > 1 ? 's' : ''})
                   </div>
-                  <p className="text-[0.85rem] text-text-secondary leading-snug">{lr.remarks}</p>
+                  <p className="text-[0.85rem] text-text-secondary leading-relaxed">{lr.remarks}</p>
                   {lr.admin_comment && (
-                    <p className="text-[0.82rem] text-text-muted mt-2 pt-2 border-t border-border-color">
+                    <p className="text-[0.82rem] text-text-muted mt-2 pt-2 border-t border-border-color/30">
                       <strong>Admin:</strong> {lr.admin_comment}
                     </p>
                   )}
@@ -356,19 +348,23 @@ function TimeOff() {
   // ===== ADMIN VIEW =====
   const renderAdminView = () => (
     <div className="flex flex-col gap-6" id="timeoff-admin-view">
-      <div className="flex items-center justify-between gap-4 mb-7 flex-wrap">
+      <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Leave Management</h2>
         <div className="flex gap-2 flex-wrap">
           {['all', 'pending', 'approved', 'rejected'].map((filter) => (
             <button
               key={filter}
-              className={`${adminFilter === filter ? 'px-4 py-2 bg-primary-purple/10 border border-primary-purple rounded-md text-primary-purple text-[0.85rem] font-semibold transition-all duration-200 flex items-center gap-1.5' : 'px-4 py-2 bg-bg-card border border-border-color rounded-md text-text-secondary text-[0.85rem] font-medium transition-all duration-200 flex items-center gap-1.5 hover:border-primary-purple hover:text-text-primary'}`}
+              className={`px-4 py-2 border rounded-md text-[0.85rem] font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                adminFilter === filter
+                  ? 'bg-primary-purple/10 border-primary-purple text-primary-purple font-semibold'
+                  : 'bg-bg-card border-border-color text-text-secondary hover:border-primary-purple hover:text-text-primary'
+              }`}
               onClick={() => setAdminFilter(filter)}
               id={`timeoff-filter-${filter}`}
             >
               {filter.charAt(0).toUpperCase() + filter.slice(1)}
               {filter === 'pending' && pendingCount > 0 && (
-                <span className="bg-status-warning text-black text-[0.7rem] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">{pendingCount}</span>
+                <span className="bg-status-warning text-black text-[0.7rem] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center">{pendingCount}</span>
               )}
             </button>
           ))}
@@ -376,10 +372,10 @@ function TimeOff() {
       </div>
 
       {/* Leave Requests Table */}
-      <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden">
+      <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden shadow-card">
         <table className="w-full border-collapse" id="admin-leave-table">
-          <thead className="bg-primary-purple/6">
-            <tr>
+          <thead>
+            <tr className="bg-primary-purple/6">
               <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Employee</th>
               <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Type</th>
               <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Duration</th>
@@ -391,35 +387,35 @@ function TimeOff() {
           </thead>
           <tbody>
             {loadingAdminLeaves ? (
-              <tr><td colSpan="7" className="text-center! py-10 px-4! text-text-muted! italic">Loading…</td></tr>
+              <tr><td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">Loading…</td></tr>
             ) : filteredAdminLeaves.length > 0 ? (
               filteredAdminLeaves.map((lr) => (
-                <tr key={lr.id} className={`${lr.status === 'pending' ? 'bg-status-warning/3!' : ''} hover:bg-primary-purple/4 transition-colors duration-200`}>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                <tr key={lr.id} className={`transition-colors duration-200 hover:bg-primary-purple/4 ${lr.status === 'pending' ? '!bg-status-warning/3' : ''}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
                     <div className="flex items-center gap-2.5">
                       <div className="w-[34px] h-[34px] rounded-full bg-gradient-primary text-white flex items-center justify-center font-bold text-[0.72rem] shrink-0">
                         {getInitials(lr.first_name, lr.last_name)}
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-[0.88rem]">{lr.first_name} {lr.last_name}</span>
+                        <span className="font-semibold text-[0.88rem] text-text-primary">{lr.first_name} {lr.last_name}</span>
                         <span className="text-[0.76rem] text-text-muted">{lr.employee_id}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
                       {lr.leave_type}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle tabular-nums text-[0.82rem]! whitespace-nowrap">{formatDate(lr.start_date)} → {formatDate(lr.end_date)}</td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle"><span className="inline-flex items-center justify-center min-width-[28px] h-6 px-2 bg-primary-purple/10 text-primary-purple rounded-full font-bold text-[0.82rem]">{lr.days_requested}</span></td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">{lr.remarks}</td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClass(lr.status)}`}>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle font-semibold tabular-nums text-[0.82rem] whitespace-nowrap">{formatDate(lr.start_date)} → {formatDate(lr.end_date)}</td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle"><span className="inline-flex items-center justify-center min-w-[28px] h-6 bg-primary-purple/10 text-primary-purple rounded-full font-bold text-[0.82rem]">{lr.days_requested}</span></td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={lr.remarks}>{lr.remarks}</td>
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
                       {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/50 align-middle">
+                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
                     {lr.status === 'pending' ? (
                       <div className="flex flex-col gap-2 min-w-[160px]">
                         <input
@@ -427,11 +423,11 @@ function TimeOff() {
                           placeholder="Comment..."
                           value={approvalComment[lr.id] || ''}
                           onChange={(e) => setApprovalComment((prev) => ({ ...prev, [lr.id]: e.target.value }))}
-                          className="bg-bg-input border border-border-color text-text-primary px-2.5 py-1.5 rounded-sm text-[0.8rem] w-full focus:border-primary-purple focus:outline-none"
+                          className="bg-bg-input border border-border-color text-text-primary px-2.5 py-1.5 rounded-sm text-xs w-full focus:border-primary-purple focus:outline-none transition-all duration-200"
                         />
                         <div className="flex gap-1.5">
                           <button
-                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color transition-all duration-200 text-status-success bg-status-success/8 hover:bg-status-success/20 hover:border-status-success hover:scale-[1.1]"
+                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-success bg-status-success/8 hover:bg-status-success/20 hover:border-status-success hover:scale-110 transition-all duration-200"
                             onClick={() => handleApprove(lr.id)}
                             title="Approve"
                             disabled={approveRejectMutation.isPending}
@@ -441,7 +437,7 @@ function TimeOff() {
                             </svg>
                           </button>
                           <button
-                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color transition-all duration-200 text-status-error bg-status-error/8 hover:bg-status-error/20 hover:border-status-error hover:scale-[1.1]"
+                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-error bg-status-error/8 hover:bg-status-error/20 hover:border-status-error hover:scale-110 transition-all duration-200"
                             onClick={() => handleReject(lr.id)}
                             title="Reject"
                             disabled={approveRejectMutation.isPending}
@@ -460,7 +456,7 @@ function TimeOff() {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="text-center! py-10 px-4! text-text-muted! italic">No leave requests found for the selected filter.</td>
+                <td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">No leave requests found for the selected filter.</td>
               </tr>
             )}
           </tbody>

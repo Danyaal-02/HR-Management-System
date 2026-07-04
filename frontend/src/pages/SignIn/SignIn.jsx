@@ -147,7 +147,7 @@ function SignIn() {
                   Login ID / Email
                 </label>
                 <div
-                  className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.loginId ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}
+                  className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.loginId ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
                 >
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -174,7 +174,7 @@ function SignIn() {
                   Password
                 </label>
                 <div
-                  className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.password ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}
+                  className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.password ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}
                 >
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />

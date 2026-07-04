@@ -27,7 +27,9 @@ function SignUp() {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }))
+    }
   }
 
   const handleLogoUpload = (e) => {
@@ -244,7 +246,7 @@ function SignUp() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-companyName">Company Name</label>
                 <div className="flex gap-3 items-center">
-                  <div className={`group/input relative flex-1 flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.companyName ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                  <div className={`group/input relative flex-1 flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.companyName ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                     <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M10 11h2M10 15h2M14 11h2M14 15h2M18 11h2M18 15h2M9 3h6l3 4H6l3-4z" />
                     </svg>
@@ -289,7 +291,7 @@ function SignUp() {
               <div className="flex gap-3 w-full">
                 <div className="flex-1 flex flex-col gap-1.5">
                   <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-firstName">First Name</label>
-                  <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.firstName ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                  <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.firstName ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                     <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
@@ -300,7 +302,7 @@ function SignUp() {
                 </div>
                 <div className="flex-1 flex flex-col gap-1.5">
                   <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-lastName">Last Name</label>
-                  <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.lastName ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                  <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.lastName ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                     <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
@@ -314,7 +316,7 @@ function SignUp() {
               {/* Email */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-email">Email</label>
-                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.email ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.email ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                     <polyline points="22,6 12,13 2,6" />
@@ -327,7 +329,7 @@ function SignUp() {
               {/* Phone */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-phone">Phone</label>
-                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.phone ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.phone ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
@@ -339,12 +341,12 @@ function SignUp() {
               {/* Password */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-password">Password</label>
-                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.password ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.password ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <input type={showPassword ? 'text' : 'password'} id="signup-password" name="signup-password" placeholder="Create a strong password" value={formData.password} onChange={handleChange} autoComplete="new-password" className="flex-1 bg-transparent border-none text-text-primary text-[0.92rem] h-full focus:outline-none placeholder-text-muted" />
+                  <input type={showPassword ? 'text' : 'password'} id="signup-password" name="password" placeholder="Create a strong password" value={formData.password} onChange={handleChange} autoComplete="new-password" className="flex-1 bg-transparent border-none text-text-primary text-[0.92rem] h-full focus:outline-none placeholder-text-muted" />
                   <button type="button" className="flex items-center justify-center bg-transparent text-text-muted p-1 rounded-sm transition-all duration-200 hover:text-text-primary hover:bg-white/5" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} id="signup-toggle-password">
                     {showPassword ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -365,7 +367,7 @@ function SignUp() {
               {/* Confirm Password */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[0.82rem] font-semibold text-text-secondary tracking-wide uppercase" htmlFor="signup-confirmPassword">Confirm Password</label>
-                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.confirmPassword ? 'border-status-error! focus-within:border-status-error! focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]!' : ''}`}>
+                <div className={`group/input relative flex items-center bg-bg-input border border-border-color rounded-md px-3.5 h-12 transition-all duration-200 focus-within:border-primary-purple focus-within:bg-bg-input-focus focus-within:shadow-[0_0_0_3px_rgba(168,85,247,0.1)] ${errors.confirmPassword ? '!border-status-error !focus-within:border-status-error !focus-within:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]' : ''}`}>
                   <svg className="text-text-muted shrink-0 mr-3 transition-colors duration-200 group-focus-within/input:text-primary-purple" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>

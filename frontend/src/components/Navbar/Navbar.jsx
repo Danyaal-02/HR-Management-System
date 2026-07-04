@@ -68,7 +68,7 @@ function Navbar() {
             <Link
               to="/dashboard"
               className={`text-[0.85rem] sm:text-[0.92rem] font-medium text-text-secondary px-2 sm:px-3 py-1 sm:py-1.5 rounded-sm transition-all duration-200 hover:text-text-primary hover:bg-white/5 ${
-                location.pathname === '/dashboard' ? 'text-primary-purple bg-primary-purple/10! font-semibold' : ''
+                location.pathname === '/dashboard' ? 'text-primary-purple !bg-primary-purple/10 font-semibold' : ''
               }`}
               id="nav-link-employees"
             >
@@ -77,7 +77,7 @@ function Navbar() {
             <Link
               to="/attendance"
               className={`text-[0.85rem] sm:text-[0.92rem] font-medium text-text-secondary px-2 sm:px-3 py-1 sm:py-1.5 rounded-sm transition-all duration-200 hover:text-text-primary hover:bg-white/5 ${
-                location.pathname === '/attendance' ? 'text-primary-purple bg-primary-purple/10! font-semibold' : ''
+                location.pathname === '/attendance' ? 'text-primary-purple !bg-primary-purple/10 font-semibold' : ''
               }`}
               id="nav-link-attendance"
             >
@@ -86,7 +86,7 @@ function Navbar() {
             <Link
               to="/timeoff"
               className={`text-[0.85rem] sm:text-[0.92rem] font-medium text-text-secondary px-2 sm:px-3 py-1 sm:py-1.5 rounded-sm transition-all duration-200 hover:text-text-primary hover:bg-white/5 ${
-                location.pathname === '/timeoff' ? 'text-primary-purple bg-primary-purple/10! font-semibold' : ''
+                location.pathname === '/timeoff' ? 'text-primary-purple !bg-primary-purple/10 font-semibold' : ''
               }`}
               id="nav-link-timeoff"
             >

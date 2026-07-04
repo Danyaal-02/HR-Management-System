@@ -85,8 +85,8 @@ function MyProfile() {
     return (
       <div className="min-h-screen bg-bg-dark">
         <Navbar />
-        <main className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-center min-h-[400px]">
-          <p className="text-text-muted italic">Loading profile…</p>
+        <main className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-center min-h-[60vh]">
+          <p className="text-text-muted">Loading profile…</p>
         </main>
       </div>
     )
@@ -96,26 +96,26 @@ function MyProfile() {
     <div className="min-h-screen bg-bg-dark">
       <Navbar />
 
-      <main className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-6">
+      <main className="max-w-[1200px] mx-auto px-6 py-8">
         {/* Profile Header Card */}
-        <section className="bg-bg-card border border-border-color rounded-lg p-8 flex justify-between items-center gap-8 max-lg:flex-col max-lg:items-start" id="profile-header-card">
+        <section className="bg-bg-card border border-border-color rounded-[20px] p-8 flex justify-between items-center gap-10 shadow-[0_4px_20px_rgba(0,0,0,0.2)] mb-8 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-1.5 before:h-full before:bg-gradient-primary max-lg:flex-col max-lg:items-start max-lg:gap-8 max-sm:p-6" id="profile-header-card">
           <div className="flex items-center gap-6">
-            <div className="relative w-[100px] h-[100px] rounded-full shrink-0">
+            <div className="relative w-24 h-24 rounded-full border-3 border-border-color bg-bg-dark shrink-0">
               {(profileUser?.profile_picture || profileUser?.profilePicture) ? (
                 <img
                   src={profileUser.profile_picture || profileUser.profilePicture}
                   alt={displayName}
-                  className="w-full h-full object-cover rounded-full border-3 border-primary-purple/20"
+                  className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-gradient-primary text-white flex items-center justify-center text-3xl font-bold border-3 border-white/5">
+                <div className="w-full h-full rounded-full bg-gradient-primary text-white flex items-center justify-center font-extrabold text-[1.85rem] tracking-wide">
                   {getInitials(profileUser)}
                 </div>
               )}
               {/* Editable overlay button */}
               <button
                 type="button"
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-gradient-primary border-2 border-bg-card text-white flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 hover:opacity-90"
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-[0_2px_8px_rgba(168,85,247,0.4)] transition-all duration-200 hover:scale-110 hover:shadow-[0_4px_12px_rgba(168,85,247,0.6)] cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
                 title="Change Photo"
                 id="change-profile-pic-btn"
@@ -124,35 +124,35 @@ function MyProfile() {
                   <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
               </button>
-              <input type="file" ref={fileInputRef} accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+              <input type="file" ref={fileInputRef} accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </div>
             <div className="flex flex-col gap-1">
-              <h1 className="text-[1.6rem] font-extrabold text-text-primary m-0">{displayName}</h1>
-              <p className="text-[0.95rem] font-semibold text-primary-purple m-0">{profileUser?.role === 'admin' ? 'HR Admin' : (profileUser?.designation || 'Employee')}</p>
-              <span className="text-[0.8rem] text-text-muted font-medium">Emp ID: {profileUser?.employee_id || profileUser?.id}</span>
+              <h1 className="text-[1.6rem] font-extrabold text-text-primary tracking-tight leading-tight">{displayName}</h1>
+              <p className="text-[0.92rem] font-semibold text-text-secondary">{profileUser?.role === 'admin' ? 'HR Admin' : (profileUser?.designation || 'Employee')}</p>
+              <span className="text-[0.78rem] font-bold text-text-muted bg-white/5 px-2 py-1 rounded-sm w-fit mt-1">Emp ID: {profileUser?.employee_id || profileUser?.id}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 max-xl:grid-cols-2 max-sm:grid-cols-1 gap-x-10 gap-y-5 max-w-[600px]">
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Department</span>
-              <span className="text-[0.88rem] font-semibold text-text-primary">{profileUser?.department || '—'}</span>
+          <div className="grid grid-cols-3 gap-x-8 gap-y-4 flex-1 max-w-[680px] max-lg:w-full max-lg:max-w-none max-sm:grid-cols-2 max-sm:gap-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider">Department</span>
+              <span className="text-[0.9rem] text-text-primary font-medium">{profileUser?.department || '—'}</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Designation</span>
-              <span className="text-[0.88rem] font-semibold text-text-primary">{profileUser?.designation || '—'}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider">Designation</span>
+              <span className="text-[0.9rem] text-text-primary font-medium">{profileUser?.designation || '—'}</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Work Email</span>
-              <span className="text-[0.88rem] font-semibold text-text-primary">{profileUser?.email}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider">Work Email</span>
+              <span className="text-[0.9rem] text-text-primary font-medium break-all">{profileUser?.email}</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Mobile</span>
-              <span className="text-[0.88rem] font-semibold text-text-primary">{profileUser?.phone || 'Not set'}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider">Mobile</span>
+              <span className="text-[0.9rem] text-text-primary font-medium">{profileUser?.phone || 'Not set'}</span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[0.72rem] font-bold text-text-muted uppercase tracking-[0.5px]">Joining Date</span>
-              <span className="text-[0.88rem] font-semibold text-text-primary">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.75rem] font-bold text-text-muted uppercase tracking-wider">Joining Date</span>
+              <span className="text-[0.9rem] text-text-primary font-medium">
                 {profileUser?.date_of_joining ? profileUser.date_of_joining.split('T')[0] : '—'}
               </span>
             </div>
@@ -160,12 +160,16 @@ function MyProfile() {
         </section>
 
         {/* Tabs navigation */}
-        <section className="flex gap-2 border-b border-border-color pb-[1px] mt-2 flex-wrap">
+        <section className="flex gap-3 border-b border-border-color pb-[1px] mb-6 max-sm:overflow-x-auto max-sm:whitespace-nowrap max-sm:gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              className={`relative border-b-2 px-6 py-3 text-[0.9rem] font-semibold text-text-secondary cursor-pointer transition-all duration-200 hover:text-text-primary ${activeTab === tab.id ? 'text-primary-purple! border-primary-purple!' : 'border-transparent'}`}
+              className={`bg-transparent text-[0.95rem] font-semibold px-5 py-3 border-b-2 transition-all duration-200 hover:text-text-primary ${
+                activeTab === tab.id
+                  ? 'text-primary-purple border-primary-purple'
+                  : 'text-text-secondary border-transparent'
+              }`}
               onClick={() => setActiveTab(tab.id)}
               id={`tab-btn-${tab.id}`}
             >
@@ -175,7 +179,7 @@ function MyProfile() {
         </section>
 
         {/* Active Tab View */}
-        <section className="mt-4">
+        <section className="animate-[tabFadeIn_0.3s_ease]">
           {activeTab === 'resume' && (
             <ResumeTab
               employee={{ ...profileUser, skills, certifications, ...profileInfo }}

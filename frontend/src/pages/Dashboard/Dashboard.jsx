@@ -150,7 +150,7 @@ function Dashboard() {
           {isAdmin && (
             <button
               type="button"
-              className="bg-gradient-primary text-white rounded-[10px] px-6 h-12 text-[0.9rem] font-extrabold tracking-[0.5px] shadow-button transition-all duration-300 hover:-translate-y-0.5 hover:shadow-button-hover"
+              className="bg-gradient-primary text-white rounded-[10px] px-6 h-12 text-[0.9rem] font-extrabold tracking-[0.5px] shadow-button transition-all duration-300 hover:-translate-y-0.5 hover:shadow-button-hover shrink-0"
               onClick={() => setIsAddModalOpen(true)}
               id="dashboard-new-emp-btn"
             >
@@ -190,7 +190,7 @@ function Dashboard() {
               <p>No employees found matching your search.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6" id="employee-grid">
+            <div className="grid grid-cols-auto-250 gap-6" id="employee-grid">
               {filteredEmployees.map((emp) => (
                 <EmployeeCard
                   key={emp.id}
