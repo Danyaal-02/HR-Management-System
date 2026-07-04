@@ -1,5 +1,4 @@
 import pool from '../config/db.connection.js';
-import crypto from 'crypto';
 
 // Create the users table if it doesn't exist
 export const createUserTable = async () => {
@@ -53,37 +52,6 @@ export const generateEmployeeId = async (firstName, lastName, dateOfJoining) => 
 
   const serialNo = String(rows[0].count + 1).padStart(4, '0');
   return `${prefix}${namePart}${year}${serialNo}`;
-};
-
-/**
- * Generate a random temporary password (8 chars)
- * Guaranteed: 1 uppercase, 1 lowercase, 1 digit, 1 special char
- */
-export const generateTempPassword = () => {
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const digits = '0123456789';
-  const special = '!@#$%&*';
-
-  let password = '';
-  password += upper[Math.floor(Math.random() * upper.length)];
-  password += lower[Math.floor(Math.random() * lower.length)];
-  password += digits[Math.floor(Math.random() * digits.length)];
-  password += special[Math.floor(Math.random() * special.length)];
-
-  const allChars = upper + lower + digits + special;
-  for (let i = 0; i < 4; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
-  }
-
-  return password.split('').sort(() => Math.random() - 0.5).join('');
-};
-
-/**
- * Generate email verification token
- */
-export const generateVerificationToken = () => {
-  return crypto.randomBytes(32).toString('hex');
 };
 
 // ----- Query Helpers -----

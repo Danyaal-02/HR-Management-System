@@ -29,3 +29,12 @@ export const COMMON_MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   VALIDATION_FAILED: 'Validation failed',
 };
+
+export const ATTENDANCE_MESSAGES = {
+  ALREADY_CHECKED_IN: 'You have already checked in today.',
+  CHECK_IN_SUCCESS: 'Checked in successfully.',
+  NOT_CHECKED_IN_TODAY: 'You have not checked in today yet.',
+  ALREADY_CHECKED_OUT: 'You have already checked out today.',
+  CHECK_OUT_SUCCESS: 'Checked out successfully.',
+  INVALID_DATE_RANGE: 'Invalid date range.',
+};
