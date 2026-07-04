@@ -38,3 +38,13 @@ export const ATTENDANCE_MESSAGES = {
   CHECK_OUT_SUCCESS: 'Checked out successfully.',
   INVALID_DATE_RANGE: 'Invalid date range.',
 };
+
+export const LEAVE_MESSAGES = {
+  INSUFFICIENT_BALANCE: 'Insufficient leave balance.',
+  LEAVE_APPLIED: 'Leave requested successfully.',
+  LEAVE_NOT_FOUND: 'Leave request not found.',
+  LEAVE_UPDATED: 'Leave request status updated successfully.',
+  INVALID_DATE_RANGE: 'Invalid date range. Start date must be before or equal to end date.',
+  SICK_LEAVE_CERT_REQUIRED: 'Medical certificate attachment is required for sick leave requests.',
+  OVERLAPPING_LEAVE: 'You have already applied for leave during these dates.',
+};

@@ -5,6 +5,7 @@ import { createUserTable } from "./db/user.js";
 import { createCompanyTable } from "./db/company.js";
 import { createProfileTables } from "./db/profile.js";
 import { createAttendanceTable } from "./db/attendance.js";
+import { createLeaveTable } from "./db/leave.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ const startServer = async () => {
   await createCompanyTable();
   await createProfileTables();
   await createAttendanceTable();
+  await createLeaveTable();
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

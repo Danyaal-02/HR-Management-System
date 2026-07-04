@@ -30,6 +30,13 @@ const storage = new CloudinaryStorage({
         resource_type: 'raw',
         public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
       };
+    } else if (file.fieldname === 'attachment') {
+      folder = 'hrms/leaves';
+      return {
+        folder: folder,
+        resource_type: 'raw',
+        public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      };
     }
 
     return {
@@ -58,6 +65,20 @@ const fileFilter = (req, file, cb) => {
       cb(null, true);
     } else {
       cb(new Error('Only PDF and Word documents are allowed for resume!'), false);
+    }
+  } else if (file.fieldname === 'attachment') {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/jpg'
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF, Word documents, or Images (JPEG/PNG) are allowed for attachment!'), false);
     }
   } else {
     cb(new Error('Unknown field!'), false);
