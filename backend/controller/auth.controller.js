@@ -1,12 +1,13 @@
 import bcrypt from 'bcrypt';
 import {
   createUser, findByEmail, findByEmployeeId, findById,
-  updateUser, generateEmployeeId, generateTempPassword,
-  generateVerificationToken, findByVerificationToken,
+  updateUser, generateEmployeeId, findByVerificationToken,
 } from '../db/user.js';
 import { createCompany } from '../db/company.js';
 import { generateToken } from '../utils/generateToken.js';
 import { sendVerificationEmail, sendEmployeeWelcomeEmail } from '../utils/sendMail.js';
+import { generateTempPassword } from '../utils/password.util.js';
+import { generateVerificationToken } from '../utils/token.util.js';
 import { AUTH_MESSAGES, COMMON_MESSAGES } from '../constants/messages.js';
 
 // POST /api/auth/signup — Admin self-registers

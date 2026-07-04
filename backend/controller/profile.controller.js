@@ -9,104 +9,10 @@ import {
   getSalaryByUserId,
   createOrUpdateSalary,
 } from '../db/profile.js';
+import { getEmployeesWithTodayStatus } from '../db/attendance.js';
+import { calculateSalaryDetails } from '../utils/salary.util.js';
+import { getLocalDateString } from '../utils/date.util.js';
 import { PROFILE_MESSAGES, COMMON_MESSAGES } from '../constants/messages.js';
-
-const parseNumericSetting = (val, defaultValue) => {
-  if (val === undefined || val === null || val === '') return defaultValue;
-  const parsed = parseFloat(val);
-  return isNaN(parsed) ? defaultValue : parsed;
-};
-
-// Helper to compute salary components based on monthly wage
-export const calculateSalaryDetails = (monthWageStr, customSettings = {}) => {
-  const month_wage = parseFloat(monthWageStr) || 0.00;
-  const yearly_wage = month_wage * 12;
-
-  const basic_salary_type = customSettings.basic_salary_type || 'percent';
-  const basic_salary_value = parseNumericSetting(customSettings.basic_salary_value, 50.00);
-
-  const hra_type = customSettings.hra_type || 'percent';
-  const hra_value = parseNumericSetting(customSettings.hra_value, 50.00);
-
-  const standard_allowance = parseNumericSetting(customSettings.standard_allowance, 4167.00);
-
-  const performance_bonus_type = customSettings.performance_bonus_type || 'percent';
-  const performance_bonus_value = parseNumericSetting(customSettings.performance_bonus_value, 8.33);
-
-  const lta_type = customSettings.lta_type || 'percent';
-  const lta_value = parseNumericSetting(customSettings.lta_value, 8.33);
-
-  const pf_rate = parseNumericSetting(customSettings.pf_rate, 12.00);
-  const prof_tax = parseNumericSetting(customSettings.prof_tax, 200.00);
-
-  // 1. Calculate Basic
-  let basic = 0;
-  if (basic_salary_type === 'percent') {
-    basic = month_wage * (basic_salary_value / 100);
-  } else {
-    basic = basic_salary_value;
-  }
-
-  // 2. Calculate HRA (Percent is of Basic, not Month Wage)
-  let hra = 0;
-  if (hra_type === 'percent') {
-    hra = basic * (hra_value / 100);
-  } else {
-    hra = hra_value;
-  }
-
-  // 3. Calculate Performance Bonus
-  let bonus = 0;
-  if (performance_bonus_type === 'percent') {
-    bonus = month_wage * (performance_bonus_value / 100);
-  } else {
-    bonus = performance_bonus_value;
-  }
-
-  // 4. Calculate LTA
-  let lta = 0;
-  if (lta_type === 'percent') {
-    lta = month_wage * (lta_value / 100);
-  } else {
-    lta = lta_value;
-  }
-
-  // 5. Fixed Allowance = Month Wage - (Basic + HRA + Standard Allowance + Performance Bonus + LTA)
-  const totalAllowances = basic + hra + standard_allowance + bonus + lta;
-  const fixed_allowance = Math.max(0, month_wage - totalAllowances);
-
-  // 6. PF Calculations
-  const employee_pf = basic * (pf_rate / 100);
-  const employer_pf = basic * (pf_rate / 100);
-
-  return {
-    month_wage,
-    yearly_wage,
-    basic_salary_type,
-    basic_salary_value,
-    hra_type,
-    hra_value,
-    standard_allowance,
-    performance_bonus_type,
-    performance_bonus_value,
-    lta_type,
-    lta_value,
-    fixed_allowance,
-    pf_rate,
-    prof_tax,
-    calculated: {
-      basic,
-      hra,
-      standard_allowance,
-      performance_bonus: bonus,
-      lta,
-      fixed_allowance,
-      employee_pf,
-      employer_pf,
-      prof_tax
-    }
-  };
-};
 
 // @desc    Get profile for self or any employee
 // @route   GET /api/profile/:userId
@@ -358,30 +264,38 @@ export const updateSalary = async (req, res) => {
   }
 };
 
+
+
 // @desc    Get list of employees for Landing Dashboard
 // @route   GET /api/profile/list
 export const getDashboardEmployees = async (req, res) => {
   try {
-    const users = await findAllUsers();
+    const today = getLocalDateString();
+    const employees = await getEmployeesWithTodayStatus(today);
 
-    // Mapping users to include a default/mock attendance status indicator
+    // Mapping users to include their live attendance status indicator for today
     // (Green dot: present, Airplane icon: leave, Yellow dot: absent)
-    const data = users.map((user) => {
+    const data = employees.map((emp) => {
+      let work_status = 'absent';
+      if (emp.today_status === 'present' || emp.today_status === 'half-day') {
+        work_status = 'present';
+      } else if (emp.today_status === 'leave') {
+        work_status = 'leave';
+      }
+
       return {
-        id: user.id,
-        employee_id: user.employee_id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        department: user.department,
-        designation: user.designation,
-        date_of_joining: user.date_of_joining,
-        profile_picture: user.profile_picture,
-        // Mock attendance/work status for now:
-        // Will be updated when Attendance/Leave tables are fully integrated
-        work_status: 'absent' // Default work_status
+        id: emp.id,
+        employee_id: emp.employee_id,
+        first_name: emp.first_name,
+        last_name: emp.last_name,
+        email: emp.email,
+        role: emp.role,
+        phone: emp.phone,
+        department: emp.department,
+        designation: emp.designation,
+        date_of_joining: emp.date_of_joining,
+        profile_picture: emp.profile_picture,
+        work_status,
       };
     });
 

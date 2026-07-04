@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
