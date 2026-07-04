@@ -1,16 +1,45 @@
-# React + Vite
+# HR Management System - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for the HR Management System, built with **React** and **Vite**.
 
-Currently, two official plugins are available:
+## 🚀 Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Follow these steps to set up the project locally:
 
-## React Compiler
+### 1. Install Dependencies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Make sure you have Node.js installed. Then, run the following command to install all required dependencies:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Start the Development Server
+
+To start the app in development mode with Hot Module Replacement (HMR):
+
+```bash
+npm run dev
+```
+
+## 🛠️ Tooling & Code Quality
+
+This project is configured with industry-standard tools to ensure code quality and consistency:
+
+- **ESLint**: Catches syntax errors and enforces best practices.
+- **Prettier**: Automatically formats code for a consistent style (e.g., no semicolons, 80 character print width).
+- **Husky & lint-staged**: We use Git hooks to automatically run ESLint and Prettier on your staged files **before every commit**. This ensures that no unformatted or broken code is ever committed to the repository.
+
+### Available Scripts
+
+- `npm run dev` - Starts the Vite development server.
+- `npm run build` - Builds the app for production.
+- `npm run preview` - Previews the production build locally.
+- `npm run lint` - Runs ESLint across the codebase to check for issues.
+- `npm run format` - Runs Prettier to automatically format all files in the project.
+
+## ⚙️ Configuration Files
+
+- `.prettierrc` - Contains the rules for Prettier formatting.
+- `eslint.config.js` - Contains the ESLint configuration (integrated with Prettier).
+- `.husky/pre-commit` - The Git hook that triggers `lint-staged` before a commit.
