@@ -14,16 +14,16 @@ export const applyLeaveFn = async (formData) => {
 /**
  * GET /api/leave/my-leaves
  */
-export const getMyLeavesFn = async () => {
-  const res = await apiClient.get('/leave/my-leaves')
+export const getMyLeavesFn = async (params = {}) => {
+  const res = await apiClient.get('/leave/my-leaves', { params })
   return res.data
 }
 
 /**
  * GET /api/leave/admin/requests  (admin only)
  */
-export const getAdminLeavesFn = async () => {
-  const res = await apiClient.get('/leave/admin/requests')
+export const getAdminLeavesFn = async (params = {}) => {
+  const res = await apiClient.get('/leave/admin/requests', { params })
   return res.data
 }
 

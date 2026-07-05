@@ -30,7 +30,7 @@ export const updateSalaryFn = async ({ userId, data }) => {
 /**
  * GET /api/profile/list  — dashboard employee list
  */
-export const getDashboardEmployeesFn = async () => {
-  const res = await apiClient.get('/profile/list')
+export const getDashboardEmployeesFn = async (params = {}) => {
+  const res = await apiClient.get('/profile/list', { params })
   return res.data
 }

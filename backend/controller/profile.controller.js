@@ -271,11 +271,18 @@ export const updateSalary = async (req, res) => {
 export const getDashboardEmployees = async (req, res) => {
   try {
     const today = getLocalDateString();
-    const employees = await getEmployeesWithTodayStatus(today);
+    
+    // Parse query params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const offset = (page - 1) * limit;
+
+    const { rows, total } = await getEmployeesWithTodayStatus(today, { search, limit, offset });
 
     // Mapping users to include their live attendance status indicator for today
     // (Green dot: present, Airplane icon: leave, Yellow dot: absent)
-    const data = employees.map((emp) => {
+    const data = rows.map((emp) => {
       let work_status = 'absent';
       if (emp.today_status === 'present' || emp.today_status === 'half-day') {
         work_status = 'present';
@@ -296,12 +303,20 @@ export const getDashboardEmployees = async (req, res) => {
         date_of_joining: emp.date_of_joining,
         profile_picture: emp.profile_picture,
         work_status,
+        check_in: emp.check_in,
+        check_out: emp.check_out,
       };
     });
 
     return res.status(200).json({
       success: true,
       data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error('Get employees list error:', error.message);

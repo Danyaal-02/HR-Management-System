@@ -12,7 +12,10 @@ import payrollRoutes from "./routes/payroll.routes.js";
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true
+}));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cookieParser());
@@ -31,7 +34,13 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Backend is running" });
 });
 
+// 404 Handler for undefined API routes
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: "API route not found" });
+});
+
 // Global Error Handling Middleware
+// Note: Express 5 requires all 4 parameters for error handling middleware
 app.use((err, req, res, next) => {
   console.error("GLOBAL ERROR OCCURRED:");
   console.error(err);

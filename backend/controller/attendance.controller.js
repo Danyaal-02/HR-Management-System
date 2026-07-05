@@ -102,7 +102,7 @@ export const checkOut = async (req, res) => {
 export const getPersonalAttendance = async (req, res) => {
   try {
     const userId = req.user.id;
-    let { start_date, end_date } = req.query;
+    let { start_date, end_date, page, limit, sortBy, sortDir } = req.query;
 
     // Default to current month if dates are not provided
     if (!start_date || !end_date) {
@@ -124,7 +124,16 @@ export const getPersonalAttendance = async (req, res) => {
       });
     }
 
-    const logs = await getEmployeeAttendanceHistory(userId, start_date, end_date);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const { rows: logs, total } = await getEmployeeAttendanceHistory(userId, start_date, end_date, {
+      limit: limitNum,
+      offset,
+      sortBy,
+      sortDir
+    });
 
     // Mapped logs with calculated extra_hours and clean date string
     let daysPresent = 0;
@@ -155,9 +164,15 @@ export const getPersonalAttendance = async (req, res) => {
       summary: {
         days_present: daysPresent,
         days_leave: daysLeave,
-        total_working_days: logs.length,
+        total_working_days: total, // note this might be different due to pagination, but it represents total in range
       },
       data: formattedLogs,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      }
     });
   } catch (error) {
     console.error('Get personal attendance logs error:', error.message);
@@ -169,7 +184,7 @@ export const getPersonalAttendance = async (req, res) => {
 // @route   GET /api/attendance/overview
 export const getAdminAttendanceOverview = async (req, res) => {
   try {
-    let { date } = req.query;
+    let { date, search, page, limit, sortBy, sortDir } = req.query;
     if (!date) {
       date = getLocalDateString();
     }
@@ -182,7 +197,17 @@ export const getAdminAttendanceOverview = async (req, res) => {
       });
     }
 
-    const overview = await getAllAttendance(date);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const { rows: overview, total } = await getAllAttendance(date, {
+      search: search || '',
+      limit: limitNum,
+      offset,
+      sortBy,
+      sortDir
+    });
 
     // Map logs to include computed extra hours
     const overviewWithExtra = overview.map((row) => {
@@ -207,6 +232,12 @@ export const getAdminAttendanceOverview = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: overviewWithExtra,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      }
     });
   } catch (error) {
     console.error('Get admin attendance overview error:', error.message);
