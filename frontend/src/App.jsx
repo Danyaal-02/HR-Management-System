@@ -5,18 +5,17 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import { useAuth } from './context/AuthContext'
+import { AuthProvider, useAuth } from './features/auth'
 
 // Lazy load pages
-const SignIn = lazy(() => import('./pages/SignIn/SignIn'))
-const SignUp = lazy(() => import('./pages/SignUp/SignUp'))
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail/VerifyEmail'))
-const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'))
-const MyProfile = lazy(() => import('./pages/MyProfile/MyProfile'))
-const EmployeeProfile = lazy(() => import('./pages/EmployeeProfile/EmployeeProfile'))
-const Attendance = lazy(() => import('./pages/Attendance/Attendance'))
-const TimeOff = lazy(() => import('./pages/TimeOff/TimeOff'))
+const SignIn = lazy(() => import('./features/auth/components/SignIn/SignIn'))
+const SignUp = lazy(() => import('./features/auth/components/SignUp/SignUp'))
+const VerifyEmail = lazy(() => import('./features/auth/components/VerifyEmail/VerifyEmail'))
+const Dashboard = lazy(() => import('./features/dashboard/components/Dashboard/Dashboard'))
+const MyProfile = lazy(() => import('./features/profile/components/MyProfile/MyProfile'))
+const EmployeeProfile = lazy(() => import('./features/profile/components/EmployeeProfile/EmployeeProfile'))
+const Attendance = lazy(() => import('./features/attendance/components/Attendance/Attendance'))
+const TimeOff = lazy(() => import('./features/leave/components/TimeOff/TimeOff'))
 
 // Loader component for Suspense fallback
 const PageLoader = () => (
