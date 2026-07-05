@@ -221,9 +221,21 @@ export const hasOverlappingLeave = async (userId, startDate, endDate) => {
     FROM leave_requests
     WHERE user_id = ? 
       AND status != 'rejected'
+      AND status != 'cancelled'
       AND start_date <= ? 
       AND end_date >= ?
   `;
   const [rows] = await pool.query(sql, [userId, endDate, startDate]);
   return rows[0].count > 0;
+};
+
+// Cancel a pending leave request (Employee only)
+export const cancelLeaveRequest = async (id, userId) => {
+  const sql = `
+    UPDATE leave_requests
+    SET status = 'cancelled'
+    WHERE id = ? AND user_id = ? AND status = 'pending'
+  `;
+  const [result] = await pool.query(sql, [id, userId]);
+  return result.affectedRows > 0;
 };
