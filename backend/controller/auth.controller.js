@@ -51,7 +51,6 @@ export const signup = async (req, res) => {
         employee_id: newUser.employee_id,
         email: newUser.email,
         role: newUser.role,
-        verification_token: verificationToken,
       },
     });
   } catch (error) {
@@ -86,11 +85,9 @@ export const verifyEmail = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { login_id, password } = req.body;
-    console.log(login_id, password);
 
     let user = await findByEmployeeId(login_id);
     if (!user) user = await findByEmail(login_id);
-    console.log(user);
 
     if (!user) {
       return res.status(401).json({ success: false, message: AUTH_MESSAGES.INVALID_CREDENTIALS });
@@ -153,8 +150,6 @@ export const createEmployee = async (req, res) => {
       data: {
         id: newUser.id, employee_id: newUser.employee_id,
         email: newUser.email, role: newUser.role,
-        temp_password: tempPassword,
-        verification_token: verificationToken,
       },
     });
   } catch (error) {

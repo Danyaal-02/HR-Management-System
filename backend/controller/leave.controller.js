@@ -137,6 +137,11 @@ export const applyLeave = async (req, res) => {
 export const getBalancesAndLeaves = async (req, res) => {
   try {
     const userId = req.user.id;
+    let { page, limit, sortBy, sortDir } = req.query;
+
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
 
     // Get dynamic leave sums
     const sums = await getApprovedLeaveDaysSum(userId);
@@ -147,7 +152,12 @@ export const getBalancesAndLeaves = async (req, res) => {
     const availablePaid = Math.max(0, 24 - approvedPaid);
     const availableSick = Math.max(0, 7 - approvedSick);
 
-    const leaves = await getPersonalLeaves(userId);
+    const { rows: leaves, total } = await getPersonalLeaves(userId, {
+      limit: limitNum,
+      offset,
+      sortBy,
+      sortDir
+    });
 
     const formattedLeaves = leaves.map(leave => ({
       id: leave.id,
@@ -169,6 +179,12 @@ export const getBalancesAndLeaves = async (req, res) => {
         sick: availableSick,
       },
       leaves: formattedLeaves,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      }
     });
   } catch (error) {
     console.error('Get personal leaves error:', error.message);
@@ -181,28 +197,47 @@ export const getBalancesAndLeaves = async (req, res) => {
 // @access  Private (Admin only)
 export const getAdminLeaveDashboard = async (req, res) => {
   try {
-    const requests = await getAllLeaves();
+    let { search, status, page, limit, sortBy, sortDir } = req.query;
 
-    const formattedRequests = requests.map(req => ({
-      id: req.id,
-      user_id: req.user_id,
-      first_name: req.first_name,
-      last_name: req.last_name,
-      employee_id: req.employee_id,
-      leave_type: req.leave_type,
-      start_date: formatDateString(req.start_date),
-      end_date: formatDateString(req.end_date),
-      days_requested: parseFloat(req.days_requested),
-      remarks: req.remarks,
-      attachment_url: req.attachment_url,
-      status: req.status,
-      admin_comment: req.admin_comment,
-      created_at: req.created_at,
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const { rows: requests, total } = await getAllLeaves({
+      search: search || '',
+      status: status || 'all',
+      limit: limitNum,
+      offset,
+      sortBy,
+      sortDir
+    });
+
+    const formattedRequests = requests.map(leave => ({
+      id: leave.id,
+      user_id: leave.user_id,
+      first_name: leave.first_name,
+      last_name: leave.last_name,
+      employee_id: leave.employee_id,
+      leave_type: leave.leave_type,
+      start_date: formatDateString(leave.start_date),
+      end_date: formatDateString(leave.end_date),
+      days_requested: parseFloat(leave.days_requested),
+      remarks: leave.remarks,
+      attachment_url: leave.attachment_url,
+      status: leave.status,
+      admin_comment: leave.admin_comment,
+      created_at: leave.created_at,
     }));
 
     return res.status(200).json({
       success: true,
       data: formattedRequests,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      }
     });
   } catch (error) {
     console.error('Get admin leaves error:', error.message);
@@ -230,6 +265,13 @@ export const approveRejectLeave = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: LEAVE_MESSAGES.LEAVE_NOT_FOUND,
+      });
+    }
+
+    if (leaveRequest.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: `Leave request has already been ${leaveRequest.status}.`,
       });
     }
 

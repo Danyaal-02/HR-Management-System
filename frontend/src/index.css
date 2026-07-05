@@ -80,4 +80,13 @@
   #root {
     min-height: 100vh;
   }
+
+  button, select, label, input[type="file"], input[type="date"] {
+    cursor: pointer;
+  }
+
+  button:disabled, select:disabled, input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }

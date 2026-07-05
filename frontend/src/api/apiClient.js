@@ -16,4 +16,20 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
+// Handle 401 Unauthorized responses globally
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('hrms_token')
+      localStorage.removeItem('hrms_user')
+      // Only redirect if not already on sign-in
+      if (window.location.pathname !== '/sign-in') {
+        window.location.href = '/sign-in'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default apiClient

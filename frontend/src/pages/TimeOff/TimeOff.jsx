@@ -1,7 +1,15 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useInView } from 'react-intersection-observer'
 import { useMyLeaves, useApplyLeave, useAdminLeaves, useApproveOrRejectLeave } from '../../hooks/useLeaveApi'
 import Navbar from '../../components/Navbar/Navbar'
+import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal'
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from '@tanstack/react-table'
+import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -28,12 +36,47 @@ function TimeOff() {
   const [calYear, setCalYear] = useState(now.getFullYear())
 
   // ===== Admin: Approval =====
-  const [approvalComment, setApprovalComment] = useState({})
+  const [modalState, setModalState] = useState({ isOpen: false, type: '', id: null })
   const [adminFilter, setAdminFilter] = useState('all')
+  const [toastMessage, setToastMessage] = useState(null)
+
+  // ===== Search, Sort State =====
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [sorting, setSorting] = useState([])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const sortBy = sorting.length > 0 ? sorting[0].id : undefined
+  const sortDir = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined
 
   // ─── TanStack Query hooks ──────────────────────────────────────────────────
-  const { data: myLeavesData, isLoading: loadingMyLeaves } = useMyLeaves({ enabled: !isAdmin && !!user })
-  const { data: adminLeavesData, isLoading: loadingAdminLeaves } = useAdminLeaves({ enabled: isAdmin })
+  const { 
+    data: myLeavesData, 
+    isLoading: loadingMyLeaves,
+    fetchNextPage: fetchNextMyLeaves,
+    hasNextPage: hasNextMyLeaves,
+    isFetchingNextPage: isFetchingNextMyLeaves
+  } = useMyLeaves(
+    { sortBy, sortDir },
+    { enabled: !isAdmin && !!user }
+  )
+  
+  const { 
+    data: adminLeavesData, 
+    isLoading: loadingAdminLeaves,
+    fetchNextPage: fetchNextAdminLeaves,
+    hasNextPage: hasNextAdminLeaves,
+    isFetchingNextPage: isFetchingNextAdminLeaves
+  } = useAdminLeaves(
+    { status: adminFilter, search: debouncedSearch, sortBy, sortDir },
+    { enabled: isAdmin }
+  )
 
   const applyLeaveMutation = useApplyLeave({
     onSuccess: () => {
@@ -48,38 +91,57 @@ function TimeOff() {
   })
 
   const approveRejectMutation = useApproveOrRejectLeave({
-    onSuccess: () => setApprovalComment({}),
-    onError: (err) => alert(err?.response?.data?.message || 'Action failed.'),
+    onSuccess: (data) => {
+      setModalState({ isOpen: false, type: '', id: null })
+      setToastMessage({ type: 'success', text: data?.message || 'Leave request updated successfully.' })
+      setTimeout(() => setToastMessage(null), 3000)
+    },
+    onError: (err) => {
+      setToastMessage({ type: 'error', text: err?.response?.data?.message || 'Action failed.' })
+      setModalState({ isOpen: false, type: '', id: null })
+      setTimeout(() => setToastMessage(null), 3000)
+    },
   })
 
   // ─── Derived data ──────────────────────────────────────────────────────────
-  const myLeaves = myLeavesData?.leaves || []
-  const balances = myLeavesData?.balances || { paid: 0, sick: 0 }
+  const rawDataPages = isAdmin ? (adminLeavesData?.pages || []) : (myLeavesData?.pages || [])
+  const data = useMemo(() => {
+    return rawDataPages.flatMap(page => page.rows || page.data || page.leaves || [])
+  }, [rawDataPages])
 
-  const allAdminLeaves = adminLeavesData?.data || []
-  const pendingCount = allAdminLeaves.filter((l) => l.status === 'pending').length
+  const firstPage = rawDataPages[0] || {}
+  const balances = firstPage.balances || { paid: 0, sick: 0 }
+  
+  const isLoading = isAdmin ? loadingAdminLeaves : loadingMyLeaves
+  const hasNextPage = isAdmin ? hasNextAdminLeaves : hasNextMyLeaves
+  const isFetchingNextPage = isAdmin ? isFetchingNextAdminLeaves : isFetchingNextMyLeaves
+  const fetchNextPage = isAdmin ? fetchNextAdminLeaves : fetchNextMyLeaves
 
-  const filteredAdminLeaves = useMemo(() => {
-    if (adminFilter === 'all') return allAdminLeaves
-    return allAdminLeaves.filter((l) => l.status === adminFilter)
-  }, [allAdminLeaves, adminFilter])
+  // Intersection Observer for Infinite Scroll
+  const { ref, inView } = useInView()
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // ─── Calendar data (from approved leaves) ─────────────────────────────────
+
+  // Calendar Data
   const calendarData = useMemo(() => {
-    const data = {}
-    myLeaves
-      .filter((lr) => lr.status === 'approved')
+    const calData = {}
+    data
+      .filter((lr) => lr.status === 'approved' && !isAdmin) // only apply to employee view
       .forEach((lr) => {
         const start = new Date(lr.start_date + 'T00:00:00')
         const end = new Date(lr.end_date + 'T00:00:00')
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
-            data[d.getDate()] = 'leave'
+            calData[d.getDate()] = 'leave'
           }
         }
       })
-    return data
-  }, [myLeaves, calMonth, calYear])
+    return calData
+  }, [data, calMonth, calYear, isAdmin])
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleApplyLeave = (e) => {
@@ -109,14 +171,13 @@ function TimeOff() {
     applyLeaveMutation.mutate(fd)
   }
 
-  const handleApprove = (id) => {
-    approveRejectMutation.mutate({ id, status: 'approved', admin_comment: approvalComment[id] || '' })
-    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
-  }
+  const handleApprove = (id) => setModalState({ isOpen: true, type: 'approve', id })
+  const handleReject = (id) => setModalState({ isOpen: true, type: 'reject', id })
 
-  const handleReject = (id) => {
-    approveRejectMutation.mutate({ id, status: 'rejected', admin_comment: approvalComment[id] || '' })
-    setApprovalComment((prev) => ({ ...prev, [id]: '' }))
+  const handleConfirmModal = (comment) => {
+    const { type, id } = modalState
+    const status = type === 'approve' ? 'approved' : 'rejected'
+    approveRejectMutation.mutate({ id, status, admin_comment: comment })
   }
 
   const getStatusClass = (status) => {
@@ -141,6 +202,148 @@ function TimeOff() {
     if (!dateStr) return ''
     return dateStr.split('T')[0]
   }
+  
+  const getInitials = (firstName, lastName) => {
+    const f = (firstName || '')[0] || ''
+    const l = (lastName || '')[0] || ''
+    return (f + l).toUpperCase() || '??'
+  }
+
+  // ===== Columns =====
+  const columns = useMemo(() => {
+    const cols = []
+    
+    if (isAdmin) {
+      cols.push({
+        id: 'name',
+        header: 'Employee',
+        accessorFn: row => `${row.first_name} ${row.last_name}`,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2.5">
+            <div className="w-[34px] h-[34px] rounded-full bg-gradient-primary text-white flex items-center justify-center font-bold text-[0.72rem] shrink-0">
+              {getInitials(row.original.first_name, row.original.last_name)}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-[0.88rem] text-text-primary">{row.original.first_name} {row.original.last_name}</span>
+              <span className="text-[0.76rem] text-text-muted">{row.original.employee_id}</span>
+            </div>
+          </div>
+        )
+      })
+    }
+
+    cols.push(
+      {
+        id: 'leave_type',
+        header: 'Type',
+        accessorKey: 'leave_type',
+        cell: ({ getValue }) => (
+          <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(getValue())}`}>
+            {getValue()}
+          </span>
+        )
+      },
+      {
+        id: 'start_date',
+        header: 'Duration',
+        accessorFn: row => `${formatDate(row.start_date)} → ${formatDate(row.end_date)}`,
+        cell: ({ getValue }) => <span className="font-semibold tabular-nums text-[0.82rem] whitespace-nowrap">{getValue()}</span>
+      },
+      {
+        id: 'days',
+        header: 'Days',
+        accessorKey: 'days_requested',
+        cell: ({ getValue }) => (
+          <span className="inline-flex items-center justify-center min-w-[28px] h-6 bg-primary-purple/10 text-primary-purple rounded-full font-bold text-[0.82rem]">
+            {getValue()}
+          </span>
+        )
+      },
+      {
+        id: 'remarks',
+        header: 'Reason',
+        accessorKey: 'remarks',
+        enableSorting: false,
+        cell: ({ row }) => {
+          const text = row.original.remarks || ''
+          return (
+            <div className="flex flex-col gap-1 max-w-[200px]">
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[0.88rem]" title={text}>{text}</span>
+              {row.original.admin_comment && (
+                <span className="text-[0.75rem] text-text-muted italic" title={row.original.admin_comment}>
+                  Admin: {row.original.admin_comment}
+                </span>
+              )}
+            </div>
+          )
+        }
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        accessorKey: 'status',
+        cell: ({ getValue }) => {
+          const s = getValue() || 'pending'
+          return (
+            <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(s)}`}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </span>
+          )
+        }
+      }
+    )
+
+    if (isAdmin) {
+      cols.push({
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => {
+          const lr = row.original
+          if (lr.status === 'pending') {
+            return (
+              <div className="flex flex-col gap-2 min-w-[90px]">
+                <div className="flex gap-1.5">
+                  <button
+                    className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-success bg-status-success/8 hover:bg-status-success/20 hover:border-status-success hover:scale-110 transition-all duration-200 cursor-pointer"
+                    onClick={() => handleApprove(lr.id)}
+                    title="Approve"
+                    disabled={approveRejectMutation.isPending}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-error bg-status-error/8 hover:bg-status-error/20 hover:border-status-error hover:scale-110 transition-all duration-200 cursor-pointer"
+                    onClick={() => handleReject(lr.id)}
+                    title="Reject"
+                    disabled={approveRejectMutation.isPending}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )
+          }
+          return <span className="text-[0.82rem] text-text-muted italic">{lr.admin_comment || '—'}</span>
+        }
+      })
+    }
+    
+    return cols
+  }, [isAdmin, approveRejectMutation.isPending])
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    manualSorting: true,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   // ===== Calendar Rendering =====
   const renderCalendar = () => {
@@ -172,12 +375,6 @@ function TimeOff() {
     return days
   }
 
-  const getInitials = (firstName, lastName) => {
-    const f = (firstName || '')[0] || ''
-    const l = (lastName || '')[0] || ''
-    return (f + l).toUpperCase() || '??'
-  }
-
   // ===== EMPLOYEE VIEW =====
   const renderEmployeeView = () => (
     <div className="flex flex-col gap-6" id="timeoff-employee-view">
@@ -185,7 +382,6 @@ function TimeOff() {
       <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Time Off</h2>
-          {/* Leave balance pills */}
           <div className="flex gap-3 mt-2 flex-wrap">
             <span className="bg-primary-purple/15 text-primary-purple px-3 py-1 rounded-full text-[13px] font-semibold">
               🟣 Paid Leave: {balances.paid} days
@@ -195,7 +391,7 @@ function TimeOff() {
             </span>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white rounded-md font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0" onClick={() => setShowForm(!showForm)} id="timeoff-apply-btn">
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-primary text-white rounded-md font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0 cursor-pointer" onClick={() => setShowForm(!showForm)}>
           {showForm ? (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -216,8 +412,8 @@ function TimeOff() {
 
       {/* Apply Leave Form */}
       {showForm && (
-        <div className="bg-bg-card border border-border-color rounded-lg p-7 mb-7 animate-[slideDown_0.3s_ease-out]" id="timeoff-apply-form">
-          <h3 className="text-[1.1rem] font-semibold text-text-primary mb-5 font-bold">New Leave Request</h3>
+        <div className="bg-bg-card border border-border-color rounded-lg p-7 mb-7 animate-[slideDown_0.3s_ease-out]">
+          <h3 className="text-[1.1rem] font-semibold text-text-primary mb-5">New Leave Request</h3>
           <form onSubmit={handleApplyLeave}>
             <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
               <div className="flex flex-col gap-1.5">
@@ -226,18 +422,18 @@ function TimeOff() {
                   id="leave-type"
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200"
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple outline-none transition-all duration-200 cursor-pointer"
                 >
                   {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="leave-start" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">Start Date</label>
-                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
+                <input id="leave-start" type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple outline-none transition-all duration-200" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="leave-end" className="text-[0.82rem] font-semibold text-text-secondary uppercase tracking-[0.5px]">End Date</label>
-                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none transition-all duration-200" />
+                <input id="leave-end" type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple outline-none transition-all duration-200" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5 mt-4">
@@ -246,7 +442,7 @@ function TimeOff() {
                 id="leave-reason"
                 value={formData.remarks}
                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:shadow-[0_0_0_3px_rgba(168,85,247,0.15)] focus:outline-none resize-vertical min-h-[80px] transition-all duration-200"
+                className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple outline-none resize-y min-h-[80px] transition-all duration-200"
                 placeholder="Please provide a reason for your leave request..."
                 rows="3"
               />
@@ -260,15 +456,14 @@ function TimeOff() {
                   ref={attachmentRef}
                   accept="image/*,application/pdf"
                   onChange={(e) => setAttachmentFile(e.target.files[0] || null)}
-                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple focus:outline-none transition-all duration-200"
+                  className="bg-bg-input border border-border-color text-text-primary px-3.5 py-2.5 rounded-sm text-[0.9rem] focus:border-primary-purple outline-none transition-all duration-200 cursor-pointer"
                 />
               </div>
             )}
             {formError && <p className="text-status-error text-[0.85rem] mt-2.5">{formError}</p>}
             <button
               type="submit"
-              className="mt-4 px-7 py-2.5 bg-gradient-primary text-white rounded-sm font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
-              id="timeoff-submit-btn"
+              className="mt-4 px-7 py-2.5 bg-gradient-primary text-white rounded-sm font-semibold text-[0.9rem] transition-all duration-200 shadow-button hover:shadow-button-hover hover:-translate-y-0.5 cursor-pointer disabled:opacity-60"
               disabled={applyLeaveMutation.isPending}
             >
               {applyLeaveMutation.isPending ? 'Submitting…' : 'Submit Request'}
@@ -280,13 +475,13 @@ function TimeOff() {
       {/* Calendar + History Layout */}
       <div className="grid grid-cols-2 gap-6 max-md:grid-cols-1">
         {/* Calendar */}
-        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex flex-col" id="timeoff-calendar">
+        <div className="bg-bg-card border border-border-color rounded-lg p-6 flex flex-col">
           <div className="flex items-center justify-between mb-5">
-            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200 cursor-pointer" onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <span className="text-[1rem] font-bold text-text-primary">{MONTHS[calMonth]} {calYear}</span>
-            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
+            <button className="w-8 h-8 flex items-center justify-center bg-bg-input border border-border-color rounded-sm text-text-secondary hover:border-primary-purple hover:text-primary-purple transition-all duration-200 cursor-pointer" onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
@@ -304,41 +499,63 @@ function TimeOff() {
           </div>
         </div>
 
-        {/* Leave History */}
-        <div className="bg-bg-card border border-border-color rounded-lg p-6 max-h-[550px] overflow-y-auto flex flex-col" id="timeoff-history">
-          <h3 className="text-[1rem] font-bold text-text-primary mb-4">My Leave History</h3>
-          {loadingMyLeaves ? (
-            <p className="text-text-muted italic text-center py-6">Loading…</p>
-          ) : myLeaves.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {myLeaves.map((lr) => (
-                <div key={lr.id} className="bg-bg-input border border-border-color rounded-md p-4 transition-all duration-200 hover:border-primary-purple/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
-                      {lr.leave_type}
-                    </span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
-                      {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[0.82rem] text-text-secondary mb-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    {formatDate(lr.start_date)} → {formatDate(lr.end_date)} ({lr.days_requested} day{lr.days_requested > 1 ? 's' : ''})
-                  </div>
-                  <p className="text-[0.85rem] text-text-secondary leading-relaxed">{lr.remarks}</p>
-                  {lr.admin_comment && (
-                    <p className="text-[0.82rem] text-text-muted mt-2 pt-2 border-t border-border-color/30">
-                      <strong>Admin:</strong> {lr.admin_comment}
-                    </p>
-                  )}
-                </div>
-              ))}
+        {/* Leave History Table */}
+        <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden flex flex-col">
+          <div className="p-6 pb-4 border-b border-border-color">
+            <h3 className="text-[1rem] font-bold text-text-primary">My Leave History</h3>
+          </div>
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full border-collapse min-w-[500px]">
+              <thead>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id} className="bg-primary-purple/6 border-b border-border-color">
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        className={`px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] select-none ${header.column.getCanSort() ? 'cursor-pointer hover:text-text-primary' : ''}`}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <div className="flex items-center gap-2">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            header.column.getIsSorted() === 'asc' ? <ArrowUp size={14} className="text-primary-purple" /> :
+                            header.column.getIsSorted() === 'desc' ? <ArrowDown size={14} className="text-primary-purple" /> :
+                            <ArrowUpDown size={14} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={columns.length} className="text-center py-10 text-text-muted">Loading...</td></tr>
+                ) : data.length === 0 ? (
+                  <tr><td colSpan={columns.length} className="text-center py-10 text-text-muted">No records found.</td></tr>
+                ) : (
+                  table.getRowModel().rows.map(row => (
+                    <tr key={row.id} className="border-b border-border-color/30 hover:bg-primary-purple/4 transition-colors">
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="px-4 py-3.5 text-[0.88rem] text-text-primary">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {hasNextPage && (
+            <div ref={ref} className="py-4 text-center text-text-muted text-[0.85rem] flex justify-center items-center gap-2">
+              {isFetchingNextPage ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-primary-purple/30 border-t-primary-purple rounded-full animate-spin"></span>
+                  Loading more...
+                </>
+              ) : null}
             </div>
-          ) : (
-            <p className="text-text-muted italic text-center py-6">No leave requests found.</p>
           )}
         </div>
       </div>
@@ -350,117 +567,95 @@ function TimeOff() {
     <div className="flex flex-col gap-6" id="timeoff-admin-view">
       <div className="flex items-center justify-between mb-7 flex-wrap gap-4">
         <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Leave Management</h2>
-        <div className="flex gap-2 flex-wrap">
-          {['all', 'pending', 'approved', 'rejected'].map((filter) => (
-            <button
-              key={filter}
-              className={`px-4 py-2 border rounded-md text-[0.85rem] font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                adminFilter === filter
-                  ? 'bg-primary-purple/10 border-primary-purple text-primary-purple font-semibold'
-                  : 'bg-bg-card border-border-color text-text-secondary hover:border-primary-purple hover:text-text-primary'
-              }`}
-              onClick={() => setAdminFilter(filter)}
-              id={`timeoff-filter-${filter}`}
-            >
-              {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              {filter === 'pending' && pendingCount > 0 && (
-                <span className="bg-status-warning text-black text-[0.7rem] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center">{pendingCount}</span>
-              )}
-            </button>
-          ))}
+        
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Search */}
+          <div className="relative w-[260px]">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input
+              type="text"
+              placeholder="Search employee..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full py-2 pl-10 pr-4 bg-bg-card border border-border-color rounded-md text-text-primary text-[0.85rem] focus:border-primary-purple outline-none"
+            />
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {['all', 'pending', 'approved', 'rejected'].map((filter) => (
+              <button
+                key={filter}
+                className={`px-4 py-2 border rounded-md text-[0.85rem] font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                  adminFilter === filter
+                    ? 'bg-primary-purple/10 border-primary-purple text-primary-purple font-semibold'
+                    : 'bg-bg-card border-border-color text-text-secondary hover:border-primary-purple hover:text-text-primary'
+                }`}
+                onClick={() => setAdminFilter(filter)}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Leave Requests Table */}
       <div className="bg-bg-card border border-border-color rounded-lg overflow-hidden shadow-card">
-        <table className="w-full border-collapse" id="admin-leave-table">
-          <thead>
-            <tr className="bg-primary-purple/6">
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Employee</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Type</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Duration</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Days</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Reason</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Status</th>
-              <th className="px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] border-b border-border-color">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loadingAdminLeaves ? (
-              <tr><td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">Loading…</td></tr>
-            ) : filteredAdminLeaves.length > 0 ? (
-              filteredAdminLeaves.map((lr) => (
-                <tr key={lr.id} className={`transition-colors duration-200 hover:bg-primary-purple/4 ${lr.status === 'pending' ? '!bg-status-warning/3' : ''}`}>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-[34px] h-[34px] rounded-full bg-gradient-primary text-white flex items-center justify-center font-bold text-[0.72rem] shrink-0">
-                        {getInitials(lr.first_name, lr.last_name)}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id} className="bg-primary-purple/6 border-b border-border-color">
+                  {headerGroup.headers.map(header => (
+                    <th
+                      key={header.id}
+                      className={`px-4 py-3.5 text-left text-[0.78rem] font-semibold text-text-secondary uppercase tracking-[0.6px] select-none ${header.column.getCanSort() ? 'cursor-pointer hover:text-text-primary' : ''}`}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      <div className="flex items-center gap-2">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          header.column.getIsSorted() === 'asc' ? <ArrowUp size={14} className="text-primary-purple" /> :
+                          header.column.getIsSorted() === 'desc' ? <ArrowDown size={14} className="text-primary-purple" /> :
+                          <ArrowUpDown size={14} className="opacity-40" />
+                        )}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-[0.88rem] text-text-primary">{lr.first_name} {lr.last_name}</span>
-                        <span className="text-[0.76rem] text-text-muted">{lr.employee_id}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getLeaveTypeClass(lr.leave_type)}`}>
-                      {lr.leave_type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle font-semibold tabular-nums text-[0.82rem] whitespace-nowrap">{formatDate(lr.start_date)} → {formatDate(lr.end_date)}</td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle"><span className="inline-flex items-center justify-center min-w-[28px] h-6 bg-primary-purple/10 text-primary-purple rounded-full font-bold text-[0.82rem]">{lr.days_requested}</span></td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title={lr.remarks}>{lr.remarks}</td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-semibold ${getStatusClass(lr.status)}`}>
-                      {lr.status.charAt(0).toUpperCase() + lr.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-[0.88rem] text-text-primary border-b border-border-color/30 vertical-middle">
-                    {lr.status === 'pending' ? (
-                      <div className="flex flex-col gap-2 min-w-[160px]">
-                        <input
-                          type="text"
-                          placeholder="Comment..."
-                          value={approvalComment[lr.id] || ''}
-                          onChange={(e) => setApprovalComment((prev) => ({ ...prev, [lr.id]: e.target.value }))}
-                          className="bg-bg-input border border-border-color text-text-primary px-2.5 py-1.5 rounded-sm text-xs w-full focus:border-primary-purple focus:outline-none transition-all duration-200"
-                        />
-                        <div className="flex gap-1.5">
-                          <button
-                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-success bg-status-success/8 hover:bg-status-success/20 hover:border-status-success hover:scale-110 transition-all duration-200"
-                            onClick={() => handleApprove(lr.id)}
-                            title="Approve"
-                            disabled={approveRejectMutation.isPending}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          </button>
-                          <button
-                            className="w-8 h-8 flex items-center justify-center rounded-sm border border-border-color text-status-error bg-status-error/8 hover:bg-status-error/20 hover:border-status-error hover:scale-110 transition-all duration-200"
-                            onClick={() => handleReject(lr.id)}
-                            title="Reject"
-                            disabled={approveRejectMutation.isPending}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-[0.82rem] text-text-muted italic">{lr.admin_comment || '—'}</span>
-                    )}
-                  </td>
+                    </th>
+                  ))}
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">No leave requests found for the selected filter.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={columns.length} className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">Loading…</td></tr>
+              ) : data.length === 0 ? (
+                <tr><td colSpan={columns.length} className="text-center py-10 px-4 text-text-muted italic border-b border-border-color/30">No leave requests found.</td></tr>
+              ) : (
+                table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className={`transition-colors duration-200 hover:bg-primary-purple/4 border-b border-border-color/30 ${row.original.status === 'pending' ? '!bg-status-warning/3' : ''}`}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="px-4 py-3.5 text-[0.88rem] text-text-primary align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Infinite Scroll trigger */}
+        {hasNextPage && (
+          <div ref={ref} className="py-6 text-center text-text-muted text-[0.9rem] flex justify-center items-center gap-2 border-t border-border-color/30">
+            {isFetchingNextPage ? (
+              <>
+                <span className="w-4 h-4 border-2 border-primary-purple/30 border-t-primary-purple rounded-full animate-spin"></span>
+                Loading more...
+              </>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -471,6 +666,41 @@ function TimeOff() {
       <main className="max-w-[1200px] mx-auto px-6 py-8">
         {isAdmin ? renderAdminView() : renderEmployeeView()}
       </main>
+
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        onClose={() => !approveRejectMutation.isPending && setModalState({ isOpen: false, type: '', id: null })}
+        onConfirm={handleConfirmModal}
+        title={modalState.type === 'approve' ? 'Approve Leave Request' : 'Reject Leave Request'}
+        message={`Are you sure you want to ${modalState.type} this leave request?`}
+        requireComment={true}
+        confirmLabel={modalState.type === 'approve' ? 'Approve Request' : 'Reject Request'}
+        cancelLabel="Cancel"
+        isDestructive={modalState.type === 'reject'}
+        isLoading={approveRejectMutation.isPending}
+      />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-[2000] animate-fade-in-up text-[0.95rem] font-semibold tracking-wide border bg-bg-card backdrop-blur-md ${
+          toastMessage.type === 'success' 
+            ? 'border-status-success/50 text-status-success shadow-[0_4px_15px_rgba(34,197,94,0.15)]' 
+            : 'border-status-error/50 text-status-error shadow-[0_4px_15px_rgba(239,68,68,0.15)]'
+        }`}>
+          {toastMessage.type === 'success' ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          )}
+          {toastMessage.text}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useInView } from 'react-intersection-observer'
 import { useDashboardEmployees } from '../../hooks/useProfileApi'
 import { useCheckIn, useCheckOut } from '../../hooks/useAttendanceApi'
 import Navbar from '../../components/Navbar/Navbar'
@@ -11,11 +12,37 @@ function Dashboard() {
   const { user, updateUser } = useAuth()
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [checkInError, setCheckInError] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  const { data: employeesData, isLoading: loadingEmployees } = useDashboardEmployees()
-  const employees = employeesData?.data || []
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  const {
+    data: employeesData,
+    isLoading: loadingEmployees,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useDashboardEmployees({
+    search: debouncedSearch,
+  })
+  
+  const employees = useMemo(() => {
+    return employeesData?.pages?.flatMap(page => page.data || []) || []
+  }, [employeesData])
+
+  const { ref, inView } = useInView()
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // Determine current check-in status from the logged-in user's record
   const myRecord = employees.find((e) => e.id === user?.id)
@@ -50,13 +77,6 @@ function Dashboard() {
       navigate(`/employee/${id}`)
     }
   }
-
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      `${emp.first_name || ''} ${emp.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (emp.role || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (emp.department || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   const getTodayDateStr = () => {
     return new Date().toLocaleDateString(undefined, {
@@ -181,7 +201,7 @@ function Dashboard() {
             <div className="flex flex-col items-center justify-center gap-3 py-16 px-5 bg-bg-card border border-dashed border-border-color rounded-2xl text-text-secondary text-center">
               <p>Loading employees…</p>
             </div>
-          ) : filteredEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-16 px-5 bg-bg-card border border-dashed border-border-color rounded-2xl text-text-secondary text-center">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted">
                 <circle cx="12" cy="12" r="10" />
@@ -191,13 +211,23 @@ function Dashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-auto-250 gap-6" id="employee-grid">
-              {filteredEmployees.map((emp) => (
+              {employees.map((emp) => (
                 <EmployeeCard
                   key={emp.id}
                   employee={emp}
                   onClick={handleCardClick}
                 />
               ))}
+              {hasNextPage && (
+                <div ref={ref} className="col-span-full py-8 text-center text-text-muted text-[0.9rem] flex justify-center items-center gap-2">
+                  {isFetchingNextPage ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-primary-purple/30 border-t-primary-purple rounded-full animate-spin"></span>
+                      Loading more employees...
+                    </>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
         </section>

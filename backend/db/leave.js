@@ -55,19 +55,102 @@ export const getApprovedLeaveDaysSum = async (userId) => {
 };
 
 // Get personal leave requests history for an employee
-export const getPersonalLeaves = async (userId) => {
+export const getPersonalLeaves = async (userId, options = {}) => {
+  const { limit, offset, sortBy, sortDir } = options;
+  const params = [userId];
+  
+  let orderByClause = "ORDER BY created_at DESC";
+  const validSortColumns = {
+    'leave_type': 'leave_type',
+    'start_date': 'start_date',
+    'end_date': 'end_date',
+    'status': 'status',
+    'created_at': 'created_at',
+    'days': 'days_requested'
+  };
+
+  if (sortBy && validSortColumns[sortBy]) {
+    const dir = sortDir && sortDir.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    orderByClause = `ORDER BY ${validSortColumns[sortBy]} ${dir}`;
+  }
+
+  let limitClause = '';
+  if (limit) {
+    limitClause = 'LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset || 0));
+  }
+
+  const countSql = `SELECT COUNT(*) as total FROM leave_requests WHERE user_id = ?`;
+
   const sql = `
     SELECT id, leave_type, start_date, end_date, days_requested, remarks, attachment_url, status, admin_comment, created_at
     FROM leave_requests
     WHERE user_id = ?
-    ORDER BY created_at DESC
+    ${orderByClause}
+    ${limitClause}
   `;
-  const [rows] = await pool.query(sql, [userId]);
-  return rows;
+  
+  const [[countRes], [rows]] = await Promise.all([
+    pool.query(countSql, [userId]),
+    pool.query(sql, params)
+  ]);
+  
+  return { rows, total: countRes[0].total };
 };
 
 // Get all leave requests for admin dashboard
-export const getAllLeaves = async () => {
+export const getAllLeaves = async (options = {}) => {
+  const { search, limit, offset, sortBy, sortDir } = options;
+  const params = [];
+  let whereClause = "";
+  const countParams = [];
+
+  if (search) {
+    whereClause = "WHERE (u.first_name LIKE ? OR u.last_name LIKE ? OR u.employee_id LIKE ? OR l.leave_type LIKE ?)";
+    const likeSearch = `%${search}%`;
+    params.push(likeSearch, likeSearch, likeSearch, likeSearch);
+    countParams.push(likeSearch, likeSearch, likeSearch, likeSearch);
+  }
+
+  if (options.status && options.status !== 'all') {
+    if (whereClause) {
+      whereClause += " AND l.status = ?";
+    } else {
+      whereClause = "WHERE l.status = ?";
+    }
+    params.push(options.status);
+    countParams.push(options.status);
+  }
+
+  let orderByClause = "ORDER BY l.created_at DESC";
+  const validSortColumns = {
+    'name': 'u.first_name',
+    'leave_type': 'l.leave_type',
+    'start_date': 'l.start_date',
+    'end_date': 'l.end_date',
+    'status': 'l.status',
+    'created_at': 'l.created_at',
+    'days': 'l.days_requested'
+  };
+
+  if (sortBy && validSortColumns[sortBy]) {
+    const dir = sortDir && sortDir.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    orderByClause = `ORDER BY ${validSortColumns[sortBy]} ${dir}`;
+  }
+
+  let limitClause = '';
+  if (limit) {
+    limitClause = 'LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset || 0));
+  }
+
+  const countSql = `
+    SELECT COUNT(*) as total 
+    FROM leave_requests l 
+    JOIN users u ON l.user_id = u.id 
+    ${whereClause}
+  `;
+
   const sql = `
     SELECT 
       l.id, 
@@ -86,10 +169,17 @@ export const getAllLeaves = async () => {
       l.created_at
     FROM leave_requests l
     JOIN users u ON l.user_id = u.id
-    ORDER BY l.created_at DESC
+    ${whereClause}
+    ${orderByClause}
+    ${limitClause}
   `;
-  const [rows] = await pool.query(sql);
-  return rows;
+  
+  const [[countRes], [rows]] = await Promise.all([
+    pool.query(countSql, countParams),
+    pool.query(sql, params)
+  ]);
+  
+  return { rows, total: countRes[0].total };
 };
 
 // Fetch single leave request details

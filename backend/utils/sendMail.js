@@ -1,14 +1,20 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
-  secure: false,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+let transporter = null;
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      secure: false,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+  }
+  return transporter;
+};
 
 /**
  * Send verification email to new admin (signup)
@@ -38,7 +44,7 @@ export const sendVerificationEmail = async (email, name, verificationToken) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await getTransporter().sendMail(mailOptions);
 };
 
 /**
@@ -75,5 +81,5 @@ export const sendEmployeeWelcomeEmail = async (email, name, employeeId, tempPass
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  await getTransporter().sendMail(mailOptions);
 };
